@@ -17,14 +17,14 @@ Internet access in order to contact google and get the speech data.
 ------------
 Installation
 ------------
-To install copy googlestt.agi to your agi-bin directory.
+To install copy speech-recog.agi to your agi-bin directory.
 Usually this is /var/lib/asterisk/agi-bin/
 To make sure check your /etc/asterisk/asterisk.conf file
 
 -----
 Usage
 -----
-agi(googlestt.agi)
+agi(speech-recog.agi,[lang])
 Records from the current channel. Pressing # terminates the recording and
 returns the generated text string as the value of the variable utterance.
 
@@ -35,7 +35,7 @@ sample dialplan code for your extensions.conf
 
 ;Speech recognition test
 exten => 160,1,Answer()
-exten => 160,n,agi(speech-recog.agi)
+exten => 160,n,agi(speech-recog.agi,en-US)
 exten => 160,n,Noop(== The text you just said was: ${utterance} ==)
 exten => 160,n,Hangup()
 
@@ -43,5 +43,5 @@ exten => 160,n,Hangup()
 -------
 License
 -------
-The GoogleTTS script for asterisk is distributed under the GNU General Public
+The speech-recog script for asterisk is distributed under the GNU General Public
 License v2. See COPYING for details.

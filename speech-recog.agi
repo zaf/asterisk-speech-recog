@@ -9,6 +9,13 @@
 # the GNU General Public License Version 2. See the COPYING file
 # at the top of the source tree.
 #
+# -----
+# Usage
+# -----
+# agi(speech-recog.agi,[lang])
+# Records from the current channel. Pressing # terminates the recording and
+# returns the generated text string as the value of the variable utterance.
+#
 
 use warnings;
 use strict;
@@ -40,9 +47,8 @@ my $name;
 my $audio;
 my $uaresponse;
 my %response;
-my $timeout  = 5000;
+my $timeout  = 20000;
 my $tmpdir   = "/tmp";
-my $maxlen   = 2048;
 my $filetype = "x-flac";
 my $url      = "http://www.google.com/speech-api/v1/recognize?xjerr=1&client=chromium";
 my $sox      = `/usr/bin/which sox`;
@@ -53,6 +59,7 @@ while (<STDIN>) {
 	last if (!length);
 	$AGI{$1} = $2 if (/^agi_(\w+)\:\s+(.*)$/);
 }
+($AGI{arg_1}) = @ARGV;
 
 $name = " -- $AGI{request}:";
 
@@ -70,10 +77,17 @@ if ($samplerate == 16000) {
 	$samplerate = 8000;
 }
 
+# Setting language #
+if (length($AGI{arg_1})) {
+	$language = $AGI{arg_1} if ($AGI{arg_1} =~ /^[a-z]{2}(-[a-zA-Z]{2,6})?$/);
+}
+
 # Answer channel if not already answered #
+print STDERR "$name Checking channel status.\n" if ($debug);
 print "CHANNEL STATUS\n";
 @result = &checkresponse();
 if ($result[0] == 4) {
+	print STDERR "$name Answering channel.\n" if ($debug);
 	print "ANSWER\n";
 	&checkresponse();
 }
@@ -84,19 +98,24 @@ $SIG{'HUP'} = \&int_handler;
 
 # Record file #
 ($fh, $tmpname) = tempfile("stt_XXXXXX", DIR => $tmpdir, UNLINK => 1);
-print "RECORD FILE $tmpname $format \"#\" -1\n";
+print STDERR "$name Recording file.\n" if ($debug);
+print "RECORD FILE $tmpname $format \"#\" $timeout\n";
 @result = &checkresponse();
 die "$name Failed to record file, aborting...\n" if ($result[0] == -1);
 
 if ($debug) {
+	print STDERR "$name Languge: $language, Rate: $samplerate, Format: $format\n";
 	print STDERR "$name Playing back recorded file.\n";
 	print "STREAM FILE $tmpname \"\"\n";
 	@result = &checkresponse();
 	print STDERR "$name Failed to play file\n" if ($result[0] == -1);
 }
 
-system($sox, "--norm", "-b", "16", "-t", "raw", "-r", $samplerate, "-e", "signed-integer", "$tmpname.$format", "$tmpname.flac") == 0
-		or die "$name $sox failed: $?\n";
+# Convert sound file to flac #
+system($sox, "--norm", "-b", "16", "-t", "raw", "-r", $samplerate, "-e", "signed-integer",
+	"$tmpname.$format", "$tmpname.flac") == 0
+	or die "$name $sox failed: $?\n";
+
 open($fh, "<", "$tmpname.flac") or die "Can't read file: $!";
 $audio = do { local $/; <$fh> };
 close($fh);
@@ -114,19 +133,21 @@ if ($uaresponse->content =~ /^\{"status":(\d*),"id":"(.*)","hypotheses":\[(.*)\]
 	$response{status} = "$1";
 	$response{id}     = "$2";
 	if ($response{status} == 5) {
-		 die "Error reading audio file\n";
+		die "Error reading audio file\n";
 	}
 	if ($3 =~ /^\{"utterance":"(.*)","confidence":(.*)\}/) {
 		$response{utterance}  = "$1";
 		$response{confidence} = "$2";
 	}
 }
+
+print STDERR "$name The response was:\n", $uaresponse->content if ($debug);
+
 foreach (keys %response) {
 	print STDERR "$name Setting variable: $_ = $response{$_}\n" if ($debug);
 	print "SET VARIABLE \"$_\" \"$response{$_}\"\n";
 	&checkresponse();
 }
-print STDERR "$name ", $uaresponse->content if ($debug);
 exit;
 
 sub checkresponse {

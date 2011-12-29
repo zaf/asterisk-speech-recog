@@ -15,7 +15,7 @@ use warnings;
 use LWP::UserAgent;
 
 if (!$ARGV[0] | $ARGV[0] eq '-h' | $ARGV[0] eq '--help') {
-	print "Google Speech regognition\n";
+	print "Google Speech recognition\n";
 	print "Usage: $0 [FILES]\n\n";
 	exit;
 }
