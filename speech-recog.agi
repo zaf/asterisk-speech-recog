@@ -18,12 +18,19 @@
 # recognition service and the returned text string is assigned as the value
 # of the channel variable 'utterance'.
 # The scripts sets the following channel variables:
-# status     : Return status. 0 means success, non zero values indicating different errors.
+# status     : Return status. 0 means success, non zero values indicate different errors.
 # id         : Some id string that googles engine returns, not very useful(?).
 # utterance  : The generated text string.
 # confidence : A value between 0 and 1 indicating how 'confident' the recognition engine
-#  feels about the result. Values bigger than 0.95 usually mean that the
-#  resulted text is correct.
+#     feels about the result. Values bigger than 0.95 usually mean that the
+#     resulted text is correct.
+#
+# Parameters like default language, recording sample rate, use of sox and normalising level
+# can be set up by altering the following variables:
+# Default language:  $language
+# Sample rate:       $samplerate (value in Hz, 8000 or 16000 if used with wideband codecs)
+# Enable sox:        $use_sox (0: disable, 1: enable)
+# Normalizing level: $gain (value in db, applicable only if sox is enabled)
 #
 
 use warnings;
@@ -40,6 +47,12 @@ my $language = "en-US";
 
 # Input audio sample rate       #
 my $samplerate = 8000;
+
+# Use sox for sound manipulation#
+my $use_sox = 0;
+
+# Max sound power gain in dB    #
+my $gain = -5;
 
 # Verbose debugging messages    #
 my $debug = 0;
@@ -61,10 +74,11 @@ my $timeout  = 15000;
 my $tmpdir   = "/tmp";
 my $filetype = "x-flac";
 my $url      = "http://www.google.com/speech-api/v1/recognize?xjerr=1&client=chromium";
+my $sox      = `/usr/bin/which sox`;
 my $flac     = `/usr/bin/which flac`;
 
-my $big_endian = unpack("h*", pack("s", 1)) =~ /01/;
-if ($big_endian) {
+# Check endianness #
+if (unpack("h*", pack("s", 1)) =~ /01/) {
 	$endian = "big";
 } else {
 	$endian = "little";
@@ -81,14 +95,15 @@ while (<STDIN>) {
 $name = " -- $AGI{request}:";
 
 # Abort if required programs not found. #
-die "$name flac is missing. Aborting.\n" if (!$flac);
+die "$name sox is missing. Aborting.\n" if (!$sox && $use_sox);
+die "$name flac is missing. Aborting.\n" if (!$flac && !$use_sox);
 
-chomp($flac);
-print STDERR "$name Found flac in: $flac\n" if ($debug);
+chomp($sox, $flac);
+print STDERR "$name Found sox in: $sox, flac in: $flac\n" if ($debug);
 
 # Setting recording file format according to sample rate. #
 if ($samplerate == 16000) {
-	$format = "sln16";
+	$format    = "sln16";
 } else {
 	$format     = "sln";
 	$samplerate = 8000;
@@ -106,6 +121,19 @@ print "CHANNEL STATUS\n";
 if ($result[0] == 4) {
 	print STDERR "$name Answering channel.\n" if ($debug);
 	print "ANSWER\n";
+	&checkresponse();
+}
+
+# Reset variables. #
+%response = (
+	utterance  => -1,
+	status     => -1,
+	id         => -1,
+	confidence => -1,
+);
+print STDERR "$name Clearing channel variables.\n" if ($debug);
+foreach (keys %response) {
+	print "SET VARIABLE \"$_\" \"$response{$_}\"\n";
 	&checkresponse();
 }
 
@@ -128,10 +156,20 @@ if ($debug) {
 	print STDERR "$name Failed to play file\n" if ($result[0] == -1);
 }
 
-# Convert sound file to flac #
-system($flac, "--totally-silent", "--channels=1", "--endian=$endian", "--sign=signed",
-	"--bps=16", "--sample-rate=$samplerate", "--force-raw-format", "$tmpname.$format") == 0
-	or die "$name $flac failed: $?\n";
+# Encode file to flac. #
+if ($use_sox) {
+	# Covert file using sox, normalizing to -5db, cutting off low static noise (<100Hz)
+	# and removing possible DC offset.
+	system($sox, "-b", "16", "-t", "raw", "-r", $samplerate, "-e", "signed-integer",
+		"--endian", $endian, "$tmpname.$format", "$tmpname.flac", "norm", $gain,
+		"highpass", "100") == 0
+		or die "$name $sox failed: $?\n";
+} else {
+	# Convert sound file using flac. #
+	system($flac, "-8", "--totally-silent", "--channels=1", "--endian=$endian", "--sign=signed",
+		"--bps=16", "--force-raw-format", "--sample-rate=$samplerate", "$tmpname.$format") == 0
+		or die "$name $flac failed: $?\n";
+}
 
 open($fh, "<", "$tmpname.flac") or die "Can't read file: $!";
 $audio = do { local $/; <$fh> };

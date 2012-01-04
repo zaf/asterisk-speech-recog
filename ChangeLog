@@ -1,3 +1,10 @@
+2012-01-05 Lefteris Zafiris <zaf.000@gmail.com> - 0.3
+	Replaced sox with flac encoder for compatibility
+	with older distros (RHEL 5). Sox can be enabled
+	by the user.
+	When sox is in use it normalizes the audio, removes
+	low frequency noise and possible DC offset.
+
 2012-01-04 Lefteris Zafiris <zaf.000@gmail.com> - 0.2
 	Added option for setting the speech language.
 	More debugging messages added.
