@@ -1,9 +1,9 @@
-=====================================================
-    Google Speech recognition script for Asterisk
-=====================================================
+==============================================
+    Speech recognition script for Asterisk
+==============================================
 
 This script makes use of Google's speech recognition engine
-in order to redner speech to text and return it back to the user
+in order to redner speech to text and return it back to the dialplan
 as an asterisk channel variable.
 
 ------------
@@ -25,8 +25,16 @@ To make sure check your /etc/asterisk/asterisk.conf file
 Usage
 -----
 agi(speech-recog.agi,[lang])
-Records from the current channel. Pressing # terminates the recording and
-returns the generated text string as the value of the variable utterance.
+Records from the current channel untill the pound key (#) is pressed or the
+timeout (15 seconds) is reached. The recording is send over to googles speech
+recognition service and the returned text string is assigned as the value
+of the channel variable 'utterance'.
+The scripts sets the following channel variables:
+status     : Return status. 0 means success, non zero values indicating different errors.
+id         : Some id string that googles engine returns, not very useful(?).
+utterance  : The generated text string.
+confidence : A value between 0 and 1 indicating the probability of a correct recognition.
+ Values biger than 0.95 usually mean that the resulted text is correct.
 
 --------
 Examples
@@ -34,29 +42,30 @@ Examples
 sample dialplan code for your extensions.conf
 
 ;Simple speech recognition
-exten => 123,1,Answer()
-exten => 123,n,agi(speech-recog.agi,en-US)
-exten => 123,n,Noop(== The text you just said was: ${utterance} ==)
-exten => 123,n,Hangup()
+exten => 1234,1,Answer()
+exten => 1234,n,agi(speech-recog.agi,en-US)
+exten => 1234,n,Noop(== The text you just said was: ${utterance} ==)
+exten => 1234,n,Noop(== The probability to be right is: ${confidence} ==)
+exten => 1234,n,Hangup()
 
 ;Speech recognition demo also using googletts.agi for text to speech synthesis:
-exten => 124,1,Answer()
-exten => 124,n,agi(googletts.agi,"Please say something in English. When done press the pound key.",en)
-exten => 124,n(record),agi(speech-recog.agi,en-US)
-exten => 124,n,Noop(== Script returned: ${status} , ${id} , ${confidence} , ${utterance} ==)
-exten => 124,n,GotoIf($["${status}" = "0"]?success:fail)
+exten => 1235,1,Answer()
+exten => 1235,n,agi(googletts.agi,"Please say something in English. When done press the pound key.",en)
+exten => 1235,n(record),agi(speech-recog.agi,en-US)
+exten => 1235,n,Noop(== Script returned: ${status} , ${id} , ${confidence} , ${utterance} ==)
+exten => 1235,n,GotoIf($["${status}" = "0"]?success:fail)
 
-exten => 124,n(success),GotoIf($["${confidence}" > "0.9"]?playback:retry)
+exten => 1235,n(success),GotoIf($["${confidence}" > "0.9"]?playback:retry)
 
-exten => 124,n(retry),agi(googletts.agi,"I'm not feeling confident enough with the result, can you please repeat more clearly?",en)
-exten => 124,n,goto(record)
+exten => 1235,n(playback),agi(googletts.agi,"The text you just said was...",en)
+exten => 1235,n,agi(googletts.agi,"${utterance}",en)
+exten => 1235,n,goto(end)
 
-exten => 124,n(playback),agi(googletts.agi,"The text you just said was...",en)
-exten => 124,n,agi(googletts.agi,"${utterance}",en)
-exten => 124,n,goto(end)
+exten => 1235,n(retry),agi(googletts.agi,"Can you please repeat more clearly?",en)
+exten => 1235,n,goto(record)
 
-exten => 124,n(fail),agi(googletts.agi,"Failed to get speech data.",en)
-exten => 124,n(end),Hangup()
+exten => 1235,n(fail),agi(googletts.agi,"Failed to get speech data.",en)
+exten => 1235,n(end),Hangup()
 
 -------
 License

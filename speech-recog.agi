@@ -3,7 +3,7 @@
 #
 # AGI script that renders speech to text using Google's speech recognition engine.
 #
-# Copyright (C) 2011, Lefteris Zafiris <zaf.000@gmail.com>
+# Copyright (C) 2011 - 2012, Lefteris Zafiris <zaf.000@gmail.com>
 #
 # This program is free software, distributed under the terms of
 # the GNU General Public License Version 2. See the COPYING file
@@ -13,8 +13,17 @@
 # Usage
 # -----
 # agi(speech-recog.agi,[lang])
-# Records from the current channel. Pressing # terminates the recording and
-# returns the generated text string as the value of the variable utterance.
+# Records from the current channel untill the pound key (#) is pressed or the
+# timeout (15 seconds) is reached. The recording is send over to googles speech
+# recognition service and the returned text string is assigned as the value
+# of the channel variable 'utterance'.
+# The scripts sets the following channel variables:
+# status     : Return status. 0 means success, non zero values indicating different errors.
+# id         : Some id string that googles engine returns, not very useful(?).
+# utterance  : The generated text string.
+# confidence : A value between 0 and 1 indicating how 'confident' the recognition engine
+#  feels about the result. Values biger than 0.95 usually mean that the
+#  resulted text is correct.
 #
 
 use warnings;
@@ -132,9 +141,7 @@ die "$name Unable to get speech data.\n" if (!$uaresponse->is_success);
 if ($uaresponse->content =~ /^\{"status":(\d*),"id":"(.*)","hypotheses":\[(.*)\]\}$/) {
 	$response{status} = "$1";
 	$response{id}     = "$2";
-	if ($response{status} == 5) {
-		die "Error reading audio file\n";
-	}
+	print STDERR "Error reading audio file\n" if ($response{status} == 5);
 	if ($3 =~ /^\{"utterance":"(.*)","confidence":(.*)\}/) {
 		$response{utterance}  = "$1";
 		$response{confidence} = "$2";

@@ -1,2 +1,8 @@
+2012-01-04 Lefteris Zafiris <zaf.000@gmail.com> - 0.2
+	Added option for setting the speech language.
+	More debugging messages added.
+	Recording timeout set to 15 seconds.
+	Documentation updates and diaplan examples.
+
 2011-12-29 Lefteris Zafiris <zaf.000@gmail.com> - 0.1
 	Initial release 0.1

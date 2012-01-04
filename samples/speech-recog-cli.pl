@@ -3,11 +3,19 @@
 #
 # Render speech to text using Google's speech recognition engine.
 #
-# Copyright (C) 2011, Lefteris Zafiris <zaf.000@gmail.com>
+# Copyright (C) 2011 - 2012, Lefteris Zafiris <zaf.000@gmail.com>
 #
 # This program is free software, distributed under the terms of
 # the GNU General Public License Version 2. See the COPYING file
 # at the top of the source tree.
+#
+# The scripts sets the following values:
+# status     : Return status. 0 means success, non zero values indicating different errors.
+# id         : Some id string that googles engine returns, not very useful(?).
+# utterance  : The generated text string.
+# confidence : A value between 0 and 1 indicating how 'confident' the recognition engine
+#  feels about the result. Values biger than 0.95 usually mean that the
+#  resulted text is correct.
 #
 
 use strict;
@@ -25,6 +33,7 @@ my $samplerate = 8000;
 #my $filetype   = "x-speex-with-header-byte";
 my $filetype   = "x-flac";
 my $language   = "en-US";
+my $results    = 1;
 my @file_list  = @ARGV;
 
 foreach my $file (@file_list) {
@@ -36,7 +45,7 @@ foreach my $file (@file_list) {
 	$ua->agent("Mozilla/5.0 (X11; Linux) AppleWebKit/535.2 (KHTML, like Gecko)");
 	$ua->timeout(20);
 	my $response = $ua->post(
-		"$url&lang=$language",
+		"$url&lang=$language&maxresults=$results",
 		Content_Type => "audio/$filetype; rate=$samplerate",
 		Content      => "$audio",
 	);
