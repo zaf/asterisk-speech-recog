@@ -14,7 +14,7 @@
 # id         : Some id string that googles engine returns, not very useful(?).
 # utterance  : The generated text string.
 # confidence : A value between 0 and 1 indicating how 'confident' the recognition engine
-#  feels about the result. Values biger than 0.95 usually mean that the
+#  feels about the result. Values bigger than 0.95 usually mean that the
 #  resulted text is correct.
 #
 

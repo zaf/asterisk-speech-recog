@@ -22,7 +22,7 @@
 # id         : Some id string that googles engine returns, not very useful(?).
 # utterance  : The generated text string.
 # confidence : A value between 0 and 1 indicating how 'confident' the recognition engine
-#  feels about the result. Values biger than 0.95 usually mean that the
+#  feels about the result. Values bigger than 0.95 usually mean that the
 #  resulted text is correct.
 #
 
@@ -56,11 +56,19 @@ my $name;
 my $audio;
 my $uaresponse;
 my %response;
+my $endian;
 my $timeout  = 15000;
 my $tmpdir   = "/tmp";
 my $filetype = "x-flac";
 my $url      = "http://www.google.com/speech-api/v1/recognize?xjerr=1&client=chromium";
-my $sox      = `/usr/bin/which sox`;
+my $flac     = `/usr/bin/which flac`;
+
+my $big_endian = unpack("h*", pack("s", 1)) =~ /01/;
+if ($big_endian) {
+	$endian = "big";
+} else {
+	$endian = "little";
+}
 
 # Store AGI input #
 while (<STDIN>) {
@@ -73,10 +81,10 @@ while (<STDIN>) {
 $name = " -- $AGI{request}:";
 
 # Abort if required programs not found. #
-die "$name sox is missing. Aborting.\n" if (!$sox);
+die "$name flac is missing. Aborting.\n" if (!$flac);
 
-chomp($sox);
-print STDERR "$name Found sox in: $sox\n" if ($debug);
+chomp($flac);
+print STDERR "$name Found flac in: $flac\n" if ($debug);
 
 # Setting recording file format according to sample rate. #
 if ($samplerate == 16000) {
@@ -121,9 +129,9 @@ if ($debug) {
 }
 
 # Convert sound file to flac #
-system($sox, "--norm", "-b", "16", "-t", "raw", "-r", $samplerate, "-e", "signed-integer",
-	"$tmpname.$format", "$tmpname.flac") == 0
-	or die "$name $sox failed: $?\n";
+system($flac, "--totally-silent", "--channels=1", "--endian=$endian", "--sign=signed",
+	"--bps=16", "--sample-rate=$samplerate", "--force-raw-format", "$tmpname.$format") == 0
+	or die "$name $flac failed: $?\n";
 
 open($fh, "<", "$tmpname.flac") or die "Can't read file: $!";
 $audio = do { local $/; <$fh> };

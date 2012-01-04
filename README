@@ -11,7 +11,7 @@ Requirements
 ------------
 Perl         The Perl Programming Language
 perl-libwww  The World-Wide Web library for Perl
-sox          Sound eXchange, sound processing program
+flac         Free Lossless Audio Codec
 Internet access in order to contact google and get the speech data.
 
 ------------
@@ -34,7 +34,7 @@ status     : Return status. 0 means success, non zero values indicating differen
 id         : Some id string that googles engine returns, not very useful(?).
 utterance  : The generated text string.
 confidence : A value between 0 and 1 indicating the probability of a correct recognition.
- Values biger than 0.95 usually mean that the resulted text is correct.
+ Values bigger than 0.95 usually mean that the resulted text is correct.
 
 --------
 Examples
