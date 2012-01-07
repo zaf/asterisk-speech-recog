@@ -27,11 +27,11 @@ To make sure check your /etc/asterisk/asterisk.conf file
 -----
 Usage
 -----
-agi(speech-recog.agi,[lang])
+agi(speech-recog.agi,[lang],[timeout])
 Records from the current channel untill the pound key (#) is pressed or the
-timeout (15 seconds) is reached. The recording is send over to googles speech
-recognition service and the returned text string is assigned as the value
-of the channel variable 'utterance'.
+timeout (set to 10 seconds by default, -1 for no timeout) is reached.
+The recording is send over to googles speech recognition service and the
+returned text string is assigned as the value of the channel variable 'utterance'.
 The scripts sets the following channel variables:
 status     : Return status. 0 means success, non zero values indicating different errors.
 id         : Some id string that googles engine returns, not very useful(?).

@@ -12,11 +12,11 @@
 # -----
 # Usage
 # -----
-# agi(speech-recog.agi,[lang])
+# agi(speech-recog.agi,[lang],[timeout])
 # Records from the current channel untill the pound key (#) is pressed or the
-# timeout (15 seconds) is reached. The recording is send over to googles speech
-# recognition service and the returned text string is assigned as the value
-# of the channel variable 'utterance'.
+# timeout (set to 10 seconds by default, -1 for no timeout) is reached.
+# The recording is send over to googles speech recognition service and the
+# returned text string is assigned as the value of the channel variable 'utterance'.
 # The scripts sets the following channel variables:
 # status     : Return status. 0 means success, non zero values indicate different errors.
 # id         : Some id string that googles engine returns, not very useful(?).
@@ -70,7 +70,7 @@ my $audio;
 my $uaresponse;
 my %response;
 my $endian;
-my $timeout  = 15000;
+my $timeout  = 10000;
 my $tmpdir   = "/tmp";
 my $filetype = "x-flac";
 my $url      = "http://www.google.com/speech-api/v1/recognize?xjerr=1&client=chromium";
@@ -90,7 +90,7 @@ while (<STDIN>) {
 	last if (!length);
 	$AGI{$1} = $2 if (/^agi_(\w+)\:\s+(.*)$/);
 }
-($AGI{arg_1}) = @ARGV;
+($AGI{arg_1}, $AGI{arg_2}) = @ARGV;
 
 $name = " -- $AGI{request}:";
 
@@ -109,9 +109,13 @@ if ($samplerate == 16000) {
 	$samplerate = 8000;
 }
 
-# Setting language #
+# Setting language and timeout #
 if (length($AGI{arg_1})) {
 	$language = $AGI{arg_1} if ($AGI{arg_1} =~ /^[a-z]{2}(-[a-zA-Z]{2,6})?$/);
+}
+if (length($AGI{arg_2})) {
+	$timeout = $AGI{arg_2} if ($AGI{arg_2} == -1);
+	$timeout = $AGI{arg_2} * 1000 if ($AGI{arg_2} =~ /^\d+$/);
 }
 
 # Answer channel if not already answered #
@@ -143,8 +147,8 @@ $SIG{'HUP'} = \&int_handler;
 
 # Record file #
 ($fh, $tmpname) = tempfile("stt_XXXXXX", DIR => $tmpdir, UNLINK => 1);
-print STDERR "$name Recording file.\n" if ($debug);
-print "RECORD FILE $tmpname $format \"#\" $timeout\n";
+print STDERR "$name Recording file: format: $format, timeout: $timeout\n" if ($debug);
+print "RECORD FILE $tmpname $format \"#\" \"$timeout\" \"\"\n";
 @result = &checkresponse();
 die "$name Failed to record file, aborting...\n" if ($result[0] == -1);
 
@@ -158,11 +162,10 @@ if ($debug) {
 
 # Encode file to flac. #
 if ($use_sox) {
-	# Covert file using sox, normalizing to -5db, cutting off low static noise (<100Hz)
-	# and removing possible DC offset.
+	# Covert file using sox, normalizing to -5db, cutting off low freq and removing possible DC offset. #
 	system($sox, "-b", "16", "-t", "raw", "-r", $samplerate, "-e", "signed-integer",
 		"--endian", $endian, "$tmpname.$format", "$tmpname.flac", "norm", $gain,
-		"highpass", "100") == 0
+		"highpass", "10") == 0
 		or die "$name $sox failed: $?\n";
 } else {
 	# Convert sound file using flac. #
@@ -191,6 +194,8 @@ if ($uaresponse->content =~ /^\{"status":(\d*),"id":"(.*)","hypotheses":\[(.*)\]
 	if ($3 =~ /^\{"utterance":"(.*)","confidence":(.*)\}/) {
 		$response{utterance}  = "$1";
 		$response{confidence} = "$2";
+		# Remove spaces between digits #
+		$response{utterance}  =~ s/(\d)\s(\d)/$1$2/g;
 	}
 }
 
