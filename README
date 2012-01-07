@@ -70,6 +70,32 @@ exten => 1235,n,goto(record)
 exten => 1235,n(fail),agi(googletts.agi,"Failed to get speech data.",en)
 exten => 1235,n(end),Hangup()
 
+-------------------
+Supported Languages
+-------------------
+English
+Afrikaans
+Arabic
+Chinese
+Czech
+Dutch
+French
+German
+Hebrew
+Italian
+Indonesian
+Japanese
+Korean
+Latin
+Malaysian
+Polish
+Portuguese
+Russian
+Spanish
+Turkish
+Yue Chinese (Traditional Hong Kong)
+Zulu
+
 -------
 License
 -------
