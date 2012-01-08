@@ -9,7 +9,7 @@
 # the GNU General Public License Version 2. See the COPYING file
 # at the top of the source tree.
 #
-# The scripts sets the following values:
+# The script takes as input flac files at 8kHz and returns the following values:
 # status     : Return status. 0 means success, non zero values indicating different errors.
 # id         : Some id string that googles engine returns, not very useful(?).
 # utterance  : The generated text string.
@@ -22,8 +22,8 @@ use strict;
 use warnings;
 use LWP::UserAgent;
 
-if (!$ARGV[0] | $ARGV[0] eq '-h' | $ARGV[0] eq '--help') {
-	print "Google Speech recognition\n";
+if (!@ARGV || $ARGV[0] eq '-h' || $ARGV[0] eq '--help') {
+	print "Speech recognition using google voice.\n\n";
 	print "Usage: $0 [FILES]\n\n";
 	exit;
 }
@@ -56,7 +56,6 @@ foreach my $file (@file_list) {
 		$response{id}     = "$2";
 		if ($response{status} == 5) {
 			print "Error reading audio file\n";
-			last;
 		}
 		if ($3 =~ /^\{"utterance":"(.*)","confidence":(.*)\}/) {
 			$response{utterance}  = "$1";
