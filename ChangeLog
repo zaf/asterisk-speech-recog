@@ -1,3 +1,8 @@
+2012-01-10 Lefteris Zafiris <zaf.000@gmail.com> - 0.4
+	Added option for user defined timeout. 
+	Remove spaces between digits in returning text string.
+	Documentation updates.
+
 2012-01-05 Lefteris Zafiris <zaf.000@gmail.com> - 0.3
 	Replaced sox with flac encoder for compatibility
 	with older distros (RHEL 5). Sox can be enabled

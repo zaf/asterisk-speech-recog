@@ -162,7 +162,7 @@ if ($debug) {
 
 # Encode file to flac. #
 if ($use_sox) {
-	# Covert file using sox, normalizing to -5db, cutting off low freq and removing possible DC offset. #
+	# Covert file using sox, normalizing to -5db and removing possible DC offset. #
 	system($sox, "-b", "16", "-t", "raw", "-r", $samplerate, "-e", "signed-integer",
 		"--endian", $endian, "$tmpname.$format", "$tmpname.flac", "norm", $gain,
 		"highpass", "10") == 0
