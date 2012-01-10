@@ -3,7 +3,7 @@
 ==============================================
 
 This script makes use of Google's speech recognition engine
-in order to redner speech to text and return it back to the dialplan
+in order to render speech to text and return it back to the dialplan
 as an asterisk channel variable.
 
 ------------
