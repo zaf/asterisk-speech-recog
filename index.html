@@ -107,7 +107,7 @@ exten => 1235,n(record),agi(speech-recog.agi,en-US)
 exten => 1235,n,Noop(== Script returned: ${status} , ${id} , ${confidence} , ${utterance} ==)
 exten => 1235,n,GotoIf($["${status}" = "0"]?success:fail)
 
-exten => 1235,n(success),GotoIf($["${confidence}" > "0.9"]?playback:retry)
+exten => 1235,n(success),GotoIf($["${confidence}" > "0.8"]?playback:retry)
 
 exten => 1235,n(playback),agi(googletts.agi,"The text you just said was...",en)
 exten => 1235,n,agi(googletts.agi,"${utterance}",en)
