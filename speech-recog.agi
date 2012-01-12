@@ -17,7 +17,7 @@
 # -1 for no timeout) is reached or the interrupt key (# by default) is pressed.
 # If NOBEEP is set, no beep sound is played back to the user to indicate the
 # start of the recording.
-# The recording is send over to googles speech recognition service and the
+# The recorded sound is send over to googles speech recognition service and the
 # returned text string is assigned as the value of the channel variable 'utterance'.
 # The scripts sets the following channel variables:
 # status     : Return status. 0 means success, non zero values indicate different errors.

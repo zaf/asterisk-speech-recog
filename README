@@ -9,10 +9,13 @@ as an asterisk channel variable.
 ------------
 Requirements
 ------------
-Perl         The Perl Programming Language
-perl-libwww  The World-Wide Web library for Perl
-flac         Free Lossless Audio Codec
+Perl          The Perl Programming Language
+perl-libwww   The World-Wide Web library for Perl
+flac          Free Lossless Audio Codec
 Internet access in order to contact google and get the speech data.
+
+If you plan to use SSL you will need to install the 'IO-Socket-SSL' Perl module
+that implements an interface to SSL sockets.
 
 The script can optionally use sox for sound conversion. It works with recent
 versions of sox (It will not work in RHEL/Centos 5).
@@ -27,12 +30,12 @@ To make sure check your /etc/asterisk/asterisk.conf file
 -----
 Usage
 -----
-agi(speech-recog.agi,[lang],[timeout],[NOBEEP])
+agi(speech-recog.agi,[lang],[timeout],[intkey],[NOBEEP])
 Records from the current channel untill the timeout (set to 10 seconds by default,
 -1 for no timeout) is reached or the interrupt key (# by default) is pressed.
 If NOBEEP is set, no beep sound is played back to the user to indicate the
 start of the recording.
-The recording is send over to googles speech recognition service and the
+The recorded sound is send over to googles speech recognition service and the
 returned text string is assigned as the value of the channel variable 'utterance'.
 The scripts sets the following channel variables:
 status     : Return status. 0 means success, non zero values indicating different errors.
