@@ -27,9 +27,11 @@ To make sure check your /etc/asterisk/asterisk.conf file
 -----
 Usage
 -----
-agi(speech-recog.agi,[lang],[timeout])
-Records from the current channel untill the pound key (#) is pressed or the
-timeout (set to 10 seconds by default, -1 for no timeout) is reached.
+agi(speech-recog.agi,[lang],[timeout],[NOBEEP])
+Records from the current channel untill the timeout (set to 10 seconds by default,
+-1 for no timeout) is reached or the interrupt key (# by default) is pressed.
+If NOBEEP is set, no beep sound is played back to the user to indicate the
+start of the recording.
 The recording is send over to googles speech recognition service and the
 returned text string is assigned as the value of the channel variable 'utterance'.
 The scripts sets the following channel variables:
@@ -76,7 +78,7 @@ exten => 1236,n,agi(googletts.agi,"PLease say the number you want to dial.",en)
 exten => 1236,n(record),agi(speech-recog.agi,en-US)
 exten => 1236,n,GotoIf($[$["${status}" = "0"] & $["${confidence}" > "0.8"]]?success:retry)
 
-exten => 1236,n(success),goto(${utterance})
+exten => 1236,n(success),goto(${utterance},1)
 
 exten => 1236,n(retry),agi(googletts.agi,"Can you please repeat?",en)
 exten => 1236,n,goto(record)

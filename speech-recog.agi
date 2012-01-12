@@ -12,9 +12,11 @@
 # -----
 # Usage
 # -----
-# agi(speech-recog.agi,[lang],[timeout])
-# Records from the current channel untill the pound key (#) is pressed or the
-# timeout (set to 10 seconds by default, -1 for no timeout) is reached.
+# agi(speech-recog.agi,[lang],[timeout],[intkey],[NOBEEP])
+# Records from the current channel untill the timeout (set to 10 seconds by default,
+# -1 for no timeout) is reached or the interrupt key (# by default) is pressed.
+# If NOBEEP is set, no beep sound is played back to the user to indicate the
+# start of the recording.
 # The recording is send over to googles speech recognition service and the
 # returned text string is assigned as the value of the channel variable 'utterance'.
 # The scripts sets the following channel variables:
@@ -76,6 +78,8 @@ my $uaresponse;
 my %response;
 my $endian;
 my $url;
+my $beep       = "BEEP";
+my $intkey     = "#";
 my $comp_level = -8;
 my $ua_timeout = 10;
 my $timeout    = 10000;
@@ -98,7 +102,7 @@ while (<STDIN>) {
 	last if (!length);
 	$AGI{$1} = $2 if (/^agi_(\w+)\:\s+(.*)$/);
 }
-($AGI{arg_1}, $AGI{arg_2}) = @ARGV;
+($AGI{arg_1}, $AGI{arg_2}, $AGI{arg_3}, $AGI{arg_4}) = @ARGV;
 
 $name = " -- $AGI{request}:";
 
@@ -117,13 +121,20 @@ if ($samplerate == 16000) {
 	$samplerate = 8000;
 }
 
-# Setting language and timeout #
+# Setting language, timeout, interrupt keys and BEEP indication #
 if (length($AGI{arg_1})) {
 	$language = $AGI{arg_1} if ($AGI{arg_1} =~ /^[a-z]{2}(-[a-zA-Z]{2,6})?$/);
 }
 if (length($AGI{arg_2})) {
 	$timeout = $AGI{arg_2} if ($AGI{arg_2} == -1);
 	$timeout = $AGI{arg_2} * 1000 if ($AGI{arg_2} =~ /^\d+$/);
+}
+if (length($AGI{arg_3})) {
+	$intkey = "0123456789#*" if ($AGI{arg_3} eq "any");
+	$intkey = $AGI{arg_3} if ($AGI{arg_3} =~ /^[0-9*#]+$/);
+}
+if (length($AGI{arg_4})) {
+	$beep = "" if ($AGI{arg_4} eq "NOBEEP");
 }
 
 # Answer channel if not already answered #
@@ -157,9 +168,9 @@ $SIG{'HUP'} = \&int_handler;
 ($fh, $tmpname) = tempfile("stt_XXXXXX", DIR => $tmpdir, UNLINK => 1);
 
 print STDERR "$name Recording Format: $format, Rate: $samplerate Hz,
-	Timeout: $timeout ms\n" if ($debug);
+	Timeout: $timeout ms, Interrupt keys: $intkey\n" if ($debug);
 
-print "RECORD FILE $tmpname $format \"#\" \"$timeout\" \"\"\n";
+print "RECORD FILE $tmpname $format \"$intkey\" \"$timeout\" $beep\n";
 @result = &checkresponse();
 die "$name Failed to record file, aborting...\n" if ($result[0] == -1);
 
