@@ -95,16 +95,15 @@
 ;Simple speech recognition
 exten => 1234,1,Answer()
 exten => 1234,n,agi(speech-recog.agi,en-US)
-exten => 1234,n,Noop(== The text you just said was: ${utterance} ==)
+exten => 1234,n,Noop(== The text you just said is: ${utterance} ==)
 exten => 1234,n,Noop(== The probability to be right is: ${confidence} ==)
 exten => 1234,n,Hangup()
 
-
 ;Speech recognition demo also using googletts.agi for text to speech synthesis:
 exten => 1235,1,Answer()
-exten => 1235,n,agi(googletts.agi,"Please say something in English. When done press the pound key.",en)
+exten => 1235,n,agi(googletts.agi,"Say something in English, when done press the pound key.",en)
 exten => 1235,n(record),agi(speech-recog.agi,en-US)
-exten => 1235,n,Noop(== Script returned: ${status} , ${id} , ${confidence} , ${utterance} ==)
+exten => 1235,n,Noop(= Script returned: ${status} , ${id} , ${confidence} , ${utterance} =)
 exten => 1235,n,GotoIf($["${status}" = "0"]?success:fail)
 
 exten => 1235,n(success),GotoIf($["${confidence}" > "0.8"]?playback:retry)
@@ -118,6 +117,17 @@ exten => 1235,n,goto(record)
 
 exten => 1235,n(fail),agi(googletts.agi,"Failed to get speech data.",en)
 exten => 1235,n(end),Hangup()
+
+;Voice dialing example
+exten => 1236,1,Answer()
+exten => 1236,n,agi(googletts.agi,"Please say the number you want to dial.",en)
+exten => 1236,n(record),agi(speech-recog.agi,en-US)
+exten => 1236,n,GotoIf($[$["${status}" = "0"] & $["${confidence}" > "0.8"]]?success:retry)
+
+exten => 1236,n(success),goto(${utterance})
+
+exten => 1236,n(retry),agi(googletts.agi,"Can you please repeat?",en)
+exten => 1236,n,goto(record)
 	</pre>
 	</p>
 
