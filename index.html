@@ -124,7 +124,7 @@ exten => 1236,n,agi(googletts.agi,"Please say the number you want to dial.",en)
 exten => 1236,n(record),agi(speech-recog.agi,en-US)
 exten => 1236,n,GotoIf($[$["${status}" = "0"] & $["${confidence}" > "0.8"]]?success:retry)
 
-exten => 1236,n(success),goto(${utterance})
+exten => 1236,n(success),goto(${utterance},1)
 
 exten => 1236,n(retry),agi(googletts.agi,"Can you please repeat?",en)
 exten => 1236,n,goto(record)
