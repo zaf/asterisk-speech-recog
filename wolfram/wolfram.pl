@@ -58,7 +58,7 @@ if ($answer->{success} eq 'false') {
 #print Dump($answer);
 my $results = 0;
 
-foreach (keys $answer->{pod}) {
+foreach (keys %{$answer->{pod}}) {
 	#print Dump($answer->{pod}->{$_});
 	if ($_ eq "subpod") {
 		print "$answer->{pod}->{$_}->{plaintext}\n";
@@ -76,7 +76,7 @@ foreach (keys $answer->{pod}) {
 	}
 }
 if (!$results) {
-	foreach (keys $answer->{pod}) {
+	foreach (keys ${$answer->{pod}}) {
 		eval{ print "$_: $answer->{pod}->{$_}->{subpod}->{plaintext}\n"; };
 		eval{ print "$_: $answer->{pod}->{$_}->{subpod}->[0]->{plaintext}\n"; };
 		$results++;
