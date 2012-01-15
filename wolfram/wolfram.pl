@@ -13,7 +13,7 @@
 #
 # **This is still very immature code and the output is far from perfect.**
 # The script usually prints a single line with the answer or a list of possible answers.
-# If you failed to get any results uncomment line 21 and 52, this will print
+# If you failed to get any results uncomment line 26 and 58, this will print
 # a raw output of the data we got from wolfram and might help to find the place where the
 # answer is hiding.
 #
