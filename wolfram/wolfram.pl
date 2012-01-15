@@ -76,7 +76,7 @@ foreach (keys %{$answer->{pod}}) {
 	}
 }
 if (!$results) {
-	foreach (keys ${$answer->{pod}}) {
+	foreach (keys %{$answer->{pod}}) {
 		eval{ print "$_: $answer->{pod}->{$_}->{subpod}->{plaintext}\n"; };
 		eval{ print "$_: $answer->{pod}->{$_}->{subpod}->[0]->{plaintext}\n"; };
 		$results++;
