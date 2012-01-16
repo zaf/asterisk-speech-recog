@@ -28,7 +28,7 @@ my $app_id   = "";
 my $debug    = 0;
 my $url      = "http://api.wolframalpha.com/v2/query";
 my $question = escape($ARGV[0]);
-my $results = 0;
+my $results  = 0;
 
 if (!@ARGV || $ARGV[0] eq '-h' || $ARGV[0] eq '--help') {
 	print "Ask WolframAlpha.\n\n";
@@ -40,10 +40,10 @@ die "You must have an App ID from WolframAlpha to use this script.\n" if (!$app_
 
 my $ua = LWP::UserAgent->new;
 $ua->agent("Mozilla/5.0 (X11; Linux) AppleWebKit/535.2 (KHTML, like Gecko)");
-$ua->timeout(10);
+$ua->timeout(15);
 my $ua_request = HTTP::Request->new(
 	'GET' => "$url?input=$question&appid=$app_id".
-		"&format=plaintext&scantimeout=5&excludepodid=Input&excludepodid=Interpretation"
+		"&format=plaintext&scantimeout=8&excludepodid=Input&excludepodid=Interpretation"
 );
 my $ua_response = $ua->request($ua_request);
 if (!$ua_response->is_success) {
@@ -70,7 +70,7 @@ foreach (keys %{$answer->{pod}}) {
 		eval{ print "$answer->{pod}{$_}{subpod}[1]{plaintext}\n"; };
 		$results++;
 		last;
-	} elsif (/Definition:WordData|Basic:ChemicalData|ComparisonAsLength|Comparison/) {
+	} elsif (/Definition:WordData|Basic:ChemicalData|ComparisonAsLength|Comparison|BasicInformation|Basic|Properties/) {
 		print "$answer->{pod}{$_}{subpod}{plaintext}\n";
 		$results++;
 		last;
@@ -91,6 +91,7 @@ if (!$results) {
 		eval{ print "$_: $answer->{pod}{$_}{subpod}{plaintext}\n"; };
 		eval{ print "$_: $answer->{pod}{$_}{subpod}[0]{plaintext}\n"; };
 		eval{ print "$_: $answer->{pod}{$_}{subpod}[1]{plaintext}\n"; };
+		$results++;
 	}
 }
 print "Failed to get any resutl, possible script bug.\n" if (!$results);
