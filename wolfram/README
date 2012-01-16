@@ -1,5 +1,5 @@
 ==============================================
-    Speech recognition script for Asterisk
+    Asterisk script to query WolframAlpha
 ==============================================
 
 This AGI script submit queries to WolframAlpha, parses the data it
