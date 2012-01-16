@@ -3,7 +3,8 @@
 ==============================================
 
 This AGI script submit queries to WolframAlpha, parses the data it
-gets from wolfram and returns the answer as a dialplan variable.
+gets from wolfram and returns the answer as a dialplan variable that can be
+played back to the user.
 
 ------------
 Requirements
