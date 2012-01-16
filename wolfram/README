@@ -1,0 +1,53 @@
+==============================================
+    Speech recognition script for Asterisk
+==============================================
+
+This AGI script submit queries to WolframAlpha, parses the data it
+gets from wolfram and returns the answer as a dialplan variable.
+
+------------
+Requirements
+------------
+Perl          The Perl Programming Language
+perl-libwww   The World-Wide Web library for Perl
+flac          Free Lossless Audio Codec
+An app ID from http://products.wolframalpha.com/api
+Internet access in order to contact WolframAlpha and get the data.
+
+-----
+Usage
+-----
+agi(wolfram.agi,"text")
+Submits the text string as a query to WolframAlpha Computational Knowledge Engine.
+The retrieved answer is set as an asterisk dialplan variable named "wolfram_answer".
+
+--------
+Examples
+--------
+sample dialplan code for your extensions.conf (it also uses googletts.agi and speech-recog.agi
+AGI scripts for speech synthesis and regocnition):
+
+;WolframAlpha query demo:
+exten => 1237,1,Answer()
+exten => 1237,n,agi(googletts.agi,"What is your question?",en)
+	;;Record the question and render it to text:
+exten => 1237,n(record),agi(speech-recog.agi,en-US)
+exten => 1237,n,GotoIf($[$["${status}" = "0"] & $["${confidence}" > "0.8"]]?success:retry
+
+	;;Submit the question to wolfram:
+exten => 1237,n(success),agi(wolfram.agi,"${utterance}")
+	;;Playback the answer:
+exten => 1237,n,agi(googletts.agi,"${wolfram_answer}",en)
+exten => 1237,n,goto(end)
+
+exten => 1237,n(retry),agi(googletts.agi,"Can you please repeat more clearly?",en)
+exten => 1237,n,goto(record)
+
+exten => 1237,n(end),Hangup()
+
+
+-------
+License
+-------
+The speech-recog script for asterisk is distributed under the GNU General Public
+License v2. See COPYING for details.

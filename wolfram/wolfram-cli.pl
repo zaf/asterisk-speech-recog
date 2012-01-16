@@ -70,11 +70,8 @@ foreach (keys %{$answer->{pod}}) {
 		eval{ print "$answer->{pod}{$_}{subpod}[1]{plaintext}\n"; };
 		$results++;
 		last;
-	} elsif (/Definition:WordData|Basic:ChemicalData|ComparisonAsLength|Comparison|BasicInformation|Basic|Properties/) {
-		print "$answer->{pod}{$_}{subpod}{plaintext}\n";
-		$results++;
-		last;
-	} elsif (/NotableFacts:PeopleData|BasicInformation:PeopleData/) {
+	} elsif (/Definition:WordData|Basic:ChemicalData|ComparisonAsLength|Comparison|
+				BasicInformation|NotableFacts|Basic|Properties/x) {
 		print "$answer->{pod}{$_}{subpod}{plaintext}\n";
 		$results++;
 	} elsif (/WeatherForecast:WeatherData/) {
