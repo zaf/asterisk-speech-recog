@@ -8,9 +8,9 @@ gets from wolfram and returns the answer as a dialplan variable.
 ------------
 Requirements
 ------------
-Perl          The Perl Programming Language
-perl-libwww   The World-Wide Web library for Perl
-flac          Free Lossless Audio Codec
+Perl             The Perl Programming Language
+perl-libwww      The World-Wide Web library for Perl
+perl-XML::Simple API to maintain xml for Perl.
 An app ID from http://products.wolframalpha.com/api
 Internet access in order to contact WolframAlpha and get the data.
 
