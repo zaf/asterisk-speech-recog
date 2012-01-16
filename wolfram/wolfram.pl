@@ -11,11 +11,9 @@
 #
 # To use this script you must get an app ID from http://products.wolframalpha.com/api
 #
-# **This is still very immature code and the output is far from perfect.**
-# The script usually prints a single line with the answer or a list of possible answers.
-# If you failed to get any results uncomment line 26 and 59, this will print
-# a raw output of the data we got from wolfram and might help to find the place where the
-# answer is hiding.
+# **This is still experimental code and the output is far from perfect.**
+# If you failed to get any results set $debug = 1 this will display a raw output of the
+# data we got from wolfram and might help to find the place where the answer is hiding.
 #
 
 use strict;
@@ -27,8 +25,10 @@ use YAML;
 
 # Here you can assign your App ID from wolfram #
 my $app_id   = "";
+my $debug    = 0;
 my $url      = "http://api.wolframalpha.com/v2/query";
 my $question = escape($ARGV[0]);
+my $results = 0;
 
 if (!@ARGV || $ARGV[0] eq '-h' || $ARGV[0] eq '--help') {
 	print "Ask WolframAlpha.\n\n";
@@ -42,7 +42,8 @@ my $ua = LWP::UserAgent->new;
 $ua->agent("Mozilla/5.0 (X11; Linux) AppleWebKit/535.2 (KHTML, like Gecko)");
 $ua->timeout(10);
 my $ua_request = HTTP::Request->new(
-	'GET' => "$url?input=$question&appid=$app_id&format=plaintext&scantimeout=5&excludepodid=Input&excludepodid=Interpretation"
+	'GET' => "$url?input=$question&appid=$app_id".
+		"&format=plaintext&scantimeout=5&excludepodid=Input&excludepodid=Interpretation"
 );
 my $ua_response = $ua->request($ua_request);
 if (!$ua_response->is_success) {
@@ -56,11 +57,9 @@ if ($answer->{success} eq 'false') {
 	exit;
 }
 
-#print Dump($answer);
-my $results = 0;
+print "====Raw output:====\n", Dump($answer), "\n===End of raw output.===\n" if ($debug);
 
 foreach (keys %{$answer->{pod}}) {
-	#print Dump($answer->{pod}->{$_});
 	if (/subpod/) {
 		print "$answer->{pod}{$_}{plaintext}\n";
 		$results++;
@@ -91,7 +90,7 @@ if (!$results) {
 	foreach (keys %{$answer->{pod}}) {
 		eval{ print "$_: $answer->{pod}{$_}{subpod}{plaintext}\n"; };
 		eval{ print "$_: $answer->{pod}{$_}{subpod}[0]{plaintext}\n"; };
-		$results++;
+		eval{ print "$_: $answer->{pod}{$_}{subpod}[1]{plaintext}\n"; };
 	}
 }
 print "Failed to get any resutl, possible script bug.\n" if (!$results);
