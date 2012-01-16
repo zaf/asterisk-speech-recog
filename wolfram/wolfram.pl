@@ -13,7 +13,7 @@
 #
 # **This is still very immature code and the output is far from perfect.**
 # The script usually prints a single line with the answer or a list of possible answers.
-# If you failed to get any results uncomment line 26 and 58, this will print
+# If you failed to get any results uncomment line 26 and 59, this will print
 # a raw output of the data we got from wolfram and might help to find the place where the
 # answer is hiding.
 #
@@ -23,7 +23,7 @@ use strict;
 use LWP::UserAgent;
 use CGI::Util qw(escape);
 use XML::Simple;
-#use YAML;
+use YAML;
 
 # Here you can assign your App ID from wolfram #
 my $app_id   = "";
@@ -36,6 +36,7 @@ if (!@ARGV || $ARGV[0] eq '-h' || $ARGV[0] eq '--help') {
 	print "Example: $0 \"What time is it?\"\n";
 	exit;
 }
+die "You must have an App ID from WolframAlpha to use this script.\n" if (!$app_id);
 
 my $ua = LWP::UserAgent->new;
 $ua->agent("Mozilla/5.0 (X11; Linux) AppleWebKit/535.2 (KHTML, like Gecko)");
@@ -60,25 +61,36 @@ my $results = 0;
 
 foreach (keys %{$answer->{pod}}) {
 	#print Dump($answer->{pod}->{$_});
-	if ($_ eq "subpod") {
-		print "$answer->{pod}->{$_}->{plaintext}\n";
+	if (/subpod/) {
+		print "$answer->{pod}{$_}{plaintext}\n";
 		$results++;
 		last;
-	} elsif ($_ eq "Result") {
-		print "$answer->{pod}->{$_}->{subpod}->{plaintext}\n";
+	} elsif (/Result|Value/) {
+		eval{ print "$answer->{pod}{$_}{subpod}{plaintext}\n"; };
+		eval{ print "$answer->{pod}{$_}{subpod}[0]{plaintext}\n"; };
+		eval{ print "$answer->{pod}{$_}{subpod}[1]{plaintext}\n"; };
 		$results++;
 		last;
-	} elsif ($_ eq "Value") {
-		eval{ print "$answer->{pod}->{$_}->{subpod}->{plaintext}\n"; };
-		eval{ print "$answer->{pod}->{$_}->{subpod}->[0]->{plaintext}\n"; };
+	} elsif (/Definition:WordData|Basic:ChemicalData|ComparisonAsLength|Comparison/) {
+		print "$answer->{pod}{$_}{subpod}{plaintext}\n";
+		$results++;
+		last;
+	} elsif (/NotableFacts:PeopleData|BasicInformation:PeopleData/) {
+		print "$answer->{pod}{$_}{subpod}{plaintext}\n";
+		$results++;
+	} elsif (/WeatherForecast:WeatherData/) {
+		print "$answer->{pod}{$_}{subpod}[0]{title} $answer->{pod}{$_}{subpod}[0]{plaintext}\n";
+		print "$answer->{pod}{$_}{subpod}[1]{title} $answer->{pod}{$_}{subpod}[1]{plaintext}\n";
+		eval{ print "$answer->{pod}{$_}{subpod}[2]{title} $answer->{pod}{$_}{subpod}[2]{plaintext}\n"; };
 		$results++;
 		last;
 	}
 }
+
 if (!$results) {
 	foreach (keys %{$answer->{pod}}) {
-		eval{ print "$_: $answer->{pod}->{$_}->{subpod}->{plaintext}\n"; };
-		eval{ print "$_: $answer->{pod}->{$_}->{subpod}->[0]->{plaintext}\n"; };
+		eval{ print "$_: $answer->{pod}{$_}{subpod}{plaintext}\n"; };
+		eval{ print "$_: $answer->{pod}{$_}{subpod}[0]{plaintext}\n"; };
 		$results++;
 	}
 }
