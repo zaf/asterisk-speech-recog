@@ -3,15 +3,15 @@
 ==============================================
 
 This AGI script submit queries to WolframAlpha, parses the data it
-gets from wolfram and returns the answer as a dialplan variable that can be
+gets and returns the answer as a dialplan variable that can be
 played back to the user.
 
 ------------
 Requirements
 ------------
-Perl             The Perl Programming Language
-perl-libwww      The World-Wide Web library for Perl
-perl-XML::Simple API to maintain xml for Perl.
+Perl              The Perl Programming Language
+perl-libwww       The World-Wide Web library for Perl
+perl-XML::Simple  XML API module for Perl.
 An app ID from http://products.wolframalpha.com/api
 Internet access in order to contact WolframAlpha and get the data.
 
@@ -25,8 +25,10 @@ The retrieved answer is set as an asterisk dialplan variable named "wolfram_answ
 --------
 Examples
 --------
-sample dialplan code for your extensions.conf (it also uses googletts.agi and speech-recog.agi
-AGI scripts for speech synthesis and regocnition):
+sample dialplan code for your extensions.conf. In this example the user
+dictates his question on the phone ans hears back the answer.
+(it also uses googletts.agi and speech-recog.agi AGI scripts for
+speech synthesis and recognition):
 
 ;WolframAlpha query demo:
 exten => 1237,1,Answer()
