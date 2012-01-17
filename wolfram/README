@@ -26,7 +26,7 @@ The retrieved answer is set as an asterisk dialplan variable named "wolfram_answ
 Examples
 --------
 sample dialplan code for your extensions.conf. In this example the user
-dictates his question on the phone ans hears back the answer.
+dictates his question on the phone and hears back the answer.
 (it also uses googletts.agi and speech-recog.agi AGI scripts for
 speech synthesis and recognition):
 
