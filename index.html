@@ -128,7 +128,7 @@ exten => 1236,n(success),goto(${utterance},1)
 
 exten => 1236,n(retry),agi(googletts.agi,"Can you please repeat?",en)
 exten => 1236,n,goto(record)
-	</pre>
+	</pre><br/>
 	<p>Under the folder wolfram you can find a sample agi script that in combination with
 	speech-recog.agi sends queries to WolframAlpha and returs the answers as a dialplan
 	variable that can be read back to the user.<br/>
