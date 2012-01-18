@@ -17,9 +17,6 @@ Internet access in order to contact google and get the speech data.
 If you plan to use SSL you will need to install the 'IO-Socket-SSL' Perl module
 that implements an interface to SSL sockets.
 
-The script can optionally use sox for sound conversion. It works with recent
-versions of sox (It will not work in RHEL/Centos 5).
-
 ------------
 Installation
 ------------
@@ -52,15 +49,15 @@ sample dialplan code for your extensions.conf
 ;Simple speech recognition
 exten => 1234,1,Answer()
 exten => 1234,n,agi(speech-recog.agi,en-US)
-exten => 1234,n,Noop(== The text you just said is: ${utterance} ==)
-exten => 1234,n,Noop(== The probability to be right is: ${confidence} ==)
+exten => 1234,n,Verbose(1,The text you just said is: ${utterance})
+exten => 1234,n,Verbose(1,The probability to be right is: ${confidence})
 exten => 1234,n,Hangup()
 
 ;Speech recognition demo also using googletts.agi for text to speech synthesis:
 exten => 1235,1,Answer()
 exten => 1235,n,agi(googletts.agi,"Say something in English, when done press the pound key.",en)
 exten => 1235,n(record),agi(speech-recog.agi,en-US)
-exten => 1235,n,Noop(= Script returned: ${status} , ${id} , ${confidence} , ${utterance} =)
+exten => 1235,n,Verbose(1,Script returned: ${status} , ${id} , ${confidence} , ${utterance})
 
 ;Check return status:
 exten => 1235,n,GotoIf($["${status}" = "0"]?success:fail)
