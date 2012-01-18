@@ -61,14 +61,19 @@ exten => 1235,1,Answer()
 exten => 1235,n,agi(googletts.agi,"Say something in English, when done press the pound key.",en)
 exten => 1235,n(record),agi(speech-recog.agi,en-US)
 exten => 1235,n,Noop(= Script returned: ${status} , ${id} , ${confidence} , ${utterance} =)
+
+;Check return status:
 exten => 1235,n,GotoIf($["${status}" = "0"]?success:fail)
 
+;Check the probability of a successful recognition:
 exten => 1235,n(success),GotoIf($["${confidence}" > "0.8"]?playback:retry)
 
+;Playback the text
 exten => 1235,n(playback),agi(googletts.agi,"The text you just said was...",en)
 exten => 1235,n,agi(googletts.agi,"${utterance}",en)
 exten => 1235,n,goto(end)
 
+;Retry in case speech recognition wasn't successful:
 exten => 1235,n(retry),agi(googletts.agi,"Can you please repeat more clearly?",en)
 exten => 1235,n,goto(record)
 
@@ -86,7 +91,7 @@ exten => 1236,n(success),goto(${utterance},1)
 exten => 1236,n(retry),agi(googletts.agi,"Can you please repeat?",en)
 exten => 1236,n,goto(record)
 
-Under the folder wolfram you can find a sample agi script that in combination with speech-recog.agi 
+Under the folder wolfram you can find a sample agi script that in combination with speech-recog.agi
 sends queries to WolframAlpha and returs the answers as a dialplan variable. See wolfram/README for
 details and dialplan examples.
 

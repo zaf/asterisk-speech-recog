@@ -42,7 +42,7 @@ exten => 1237,1,Answer()
 exten => 1237,n,agi(googletts.agi,"What is your question?",en)
 	;;Record the question and render it to text:
 exten => 1237,n(record),agi(speech-recog.agi,en-US)
-exten => 1237,n,GotoIf($[$["${status}" = "0"] & $["${confidence}" > "0.8"]]?success:retry
+exten => 1237,n,GotoIf($[$["${status}" = "0"] & $["${confidence}" > "0.8"]]?success:retry)
 
 	;;Submit the question to wolfram:
 exten => 1237,n(success),agi(wolfram.agi,"${utterance}")
