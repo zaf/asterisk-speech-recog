@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 
 #
-# Submit question to WolframAlpha and print the answer.
+# Submit queries to WolframAlpha and print the answers.
 #
 # Copyright (C) 2012, Lefteris Zafiris <zaf.000@gmail.com>
 #

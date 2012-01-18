@@ -2,7 +2,7 @@
     Asterisk script to query WolframAlpha
 ==============================================
 
-This AGI script submit queries to WolframAlpha, parses the data it
+This AGI script submits queries to WolframAlpha, parses the data it
 gets and returns the answer as a dialplan variable that can be
 played back to the user.
 
@@ -14,6 +14,13 @@ perl-libwww       The World-Wide Web library for Perl
 perl-XML::Simple  XML API module for Perl.
 An app ID from http://products.wolframalpha.com/api
 Internet access in order to contact WolframAlpha and get the data.
+
+------------
+Installation
+------------
+To install copy wolfram.agi to your agi-bin directory.
+Usually this is /var/lib/asterisk/agi-bin/
+To make sure check your /etc/asterisk/asterisk.conf file
 
 -----
 Usage
@@ -43,6 +50,7 @@ exten => 1237,n(success),agi(wolfram.agi,"${utterance}")
 exten => 1237,n,agi(googletts.agi,"${wolfram_answer}",en)
 exten => 1237,n,goto(end)
 
+	;;Retry in case speech recognition wasn't successful:
 exten => 1237,n(retry),agi(googletts.agi,"Can you please repeat more clearly?",en)
 exten => 1237,n,goto(record)
 
