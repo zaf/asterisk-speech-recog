@@ -91,19 +91,23 @@
 	  </p>
 
 	<p>Asterisk dialplan examples:<br/>
+	In these examples <a href="http://zaf.github.com/asterisk-googletts/">googletts.agi</a> script
+	is used for speech synthesys:<br/>
 	<pre>
 ;;Simple speech recognition
 exten => 1234,1,Answer()
 exten => 1234,n,agi(speech-recog.agi,en-US)
-exten => 1234,n,Noop(== The text you just said is: ${utterance} ==)
-exten => 1234,n,Noop(== The probability to be right is: ${confidence} ==)
+exten => 1234,n,Verbose(1,The text you just said is: ${utterance})
+exten => 1234,n,Verbose(1,The probability to be right is: ${confidence})
 exten => 1234,n,Hangup()
+	</pre>
 
-;Speech recognition demo also using googletts.agi for text to speech synthesis:
+	<pre>
+;;Speech recognition demo:
 exten => 1235,1,Answer()
 exten => 1235,n,agi(googletts.agi,"Say something in English, when done press the pound key.",en)
 exten => 1235,n(record),agi(speech-recog.agi,en-US)
-exten => 1235,n,Noop(= Script returned: ${status} , ${id} , ${confidence} , ${utterance} =)
+exten => 1235,n,Verbose(1,Script returned: ${status} , ${id} , ${confidence} , ${utterance})
 
 ;Check return status:
 exten => 1235,n,GotoIf($["${status}" = "0"]?success:fail)
@@ -122,9 +126,9 @@ exten => 1235,n,goto(record)
 
 exten => 1235,n(fail),agi(googletts.agi,"Failed to get speech data.",en)
 exten => 1235,n(end),Hangup()
-</pre>
+	</pre>
 
-<pre>
+	<pre>
 ;;Voice dialing example
 exten => 1236,1,Answer()
 exten => 1236,n,agi(googletts.agi,"Please say the number you want to dial.",en)
@@ -143,8 +147,7 @@ exten => 1236,n,goto(record)
 	for details.</p>
 	<p>A diaplan example follows where you can dictate your question to WolframAplha and
 	listen to the answer on your phone.
-	In this example <a href="http://zaf.github.com/asterisk-googletts/">googletts.agi</a> script
-	is used for speech synthesys:<br/>
+	<br/>
 	<pre>
 ;WolframAlpha query demo:
 exten => 1237,1,Answer()
