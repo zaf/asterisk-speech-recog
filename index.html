@@ -92,7 +92,7 @@
 
 	<p>Asterisk dialplan examples:<br/>
 	<pre>
-;Simple speech recognition
+;;Simple speech recognition
 exten => 1234,1,Answer()
 exten => 1234,n,agi(speech-recog.agi,en-US)
 exten => 1234,n,Noop(== The text you just said is: ${utterance} ==)
@@ -104,21 +104,28 @@ exten => 1235,1,Answer()
 exten => 1235,n,agi(googletts.agi,"Say something in English, when done press the pound key.",en)
 exten => 1235,n(record),agi(speech-recog.agi,en-US)
 exten => 1235,n,Noop(= Script returned: ${status} , ${id} , ${confidence} , ${utterance} =)
+
+;Check return status:
 exten => 1235,n,GotoIf($["${status}" = "0"]?success:fail)
 
+;Check the probability of a successful recognition:
 exten => 1235,n(success),GotoIf($["${confidence}" > "0.8"]?playback:retry)
 
+;Playback the text:
 exten => 1235,n(playback),agi(googletts.agi,"The text you just said was...",en)
 exten => 1235,n,agi(googletts.agi,"${utterance}",en)
 exten => 1235,n,goto(end)
 
+;Retry in case speech recognition wasn't successful:
 exten => 1235,n(retry),agi(googletts.agi,"Can you please repeat more clearly?",en)
 exten => 1235,n,goto(record)
 
 exten => 1235,n(fail),agi(googletts.agi,"Failed to get speech data.",en)
 exten => 1235,n(end),Hangup()
+</pre>
 
-;Voice dialing example
+<pre>
+;;Voice dialing example
 exten => 1236,1,Answer()
 exten => 1236,n,agi(googletts.agi,"Please say the number you want to dial.",en)
 exten => 1236,n(record),agi(speech-recog.agi,en-US)
@@ -130,7 +137,7 @@ exten => 1236,n(retry),agi(googletts.agi,"Can you please repeat?",en)
 exten => 1236,n,goto(record)
 	</pre><br/>
 	<p>Under the folder wolfram you can find a sample agi script that in combination with
-	speech-recog.agi sends queries to WolframAlpha and returs the answers as a dialplan
+	speech-recog.agi sends queries to WolframAlpha and returns the answers as a dialplan
 	variable that can be read back to the user.<br/>
 	See <a href="https://raw.github.com/zaf/asterisk-speech-recog/master/wolfram/README"> wolfram/README</a>
 	for details.</p>
@@ -145,7 +152,7 @@ exten => 1237,n,agi(googletts.agi,"What is your question?",en)
 
 ;;Record the question and render it to text:
 exten => 1237,n(record),agi(speech-recog.agi,en-US)
-exten => 1237,n,GotoIf($[$["${status}" = "0"] & $["${confidence}" > "0.8"]]?success:retry
+exten => 1237,n,GotoIf($[$["${status}" = "0"] & $["${confidence}" > "0.8"]]?success:retry)
 
 ;;Submit the question to wolfram:
 exten => 1237,n(success),agi(wolfram.agi,"${utterance}")
