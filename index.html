@@ -133,7 +133,33 @@ exten => 1236,n,goto(record)
 	speech-recog.agi sends queries to WolframAlpha and returs the answers as a dialplan
 	variable that can be read back to the user.<br/>
 	See <a href="https://raw.github.com/zaf/asterisk-speech-recog/master/wolfram/README"> wolfram/README</a>
-	for details and dialplan examples.</p>
+	for details.</p>
+	<p>A diaplan example follows where you can dictate your question to WolframAplha and
+	listen to the answer on your phone.
+	In this example <a href="http://zaf.github.com/asterisk-googletts/">googletts.agi</a> script
+	is used for speech synthesys:<br/>
+	<pre>
+;WolframAlpha query demo:
+exten => 1237,1,Answer()
+exten => 1237,n,agi(googletts.agi,"What is your question?",en)
+
+;;Record the question and render it to text:
+exten => 1237,n(record),agi(speech-recog.agi,en-US)
+exten => 1237,n,GotoIf($[$["${status}" = "0"] & $["${confidence}" > "0.8"]]?success:retry
+
+;;Submit the question to wolfram:
+exten => 1237,n(success),agi(wolfram.agi,"${utterance}")
+
+;;Playback the answer:
+exten => 1237,n,agi(googletts.agi,"${wolfram_answer}",en)
+exten => 1237,n,goto(end)
+
+;;Retry in case speech recognition wasn't successful:
+exten => 1237,n(retry),agi(googletts.agi,"Can you please repeat more clearly?",en)
+exten => 1237,n,goto(record)
+
+exten => 1237,n(end),Hangup()
+	</pre>
 	</p>
 
       <h2>License</h2>
