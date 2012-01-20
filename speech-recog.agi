@@ -27,9 +27,8 @@
 #     feels about the result. Values bigger than 0.95 usually mean that the
 #     resulted text is correct.
 #
-# Parameters like default language, recording sample rate, use SSL for encrypted web
-# traffic, use of sox and normalising level can be set up by altering the
-# following variables:
+# Parameters like default language, recording sample rate and use of SSLL for encrypted
+# web traffic can be set up by altering the following variables:
 # Default language:  $language
 # Sample rate:       $samplerate (value in Hz, 8000 or 16000 if used with wideband codecs)
 # SSL:               $use_ssl (0: disable, 1: enable)

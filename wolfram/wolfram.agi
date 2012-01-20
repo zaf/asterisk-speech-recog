@@ -59,8 +59,8 @@ while (<STDIN>) {
 $name = " -- $AGI{request}:";
 
 if (!$app_id) {
-	&ret_var("You must have an App ID from WolframAlpha to use this script.");
-	die "$name You must have an App ID from WolframAlpha to use this script.\n";
+	&ret_var("You must have an Application ID from WolframAlpha to use this script.");
+	die "$name You must have an Application ID from WolframAlpha to use this script.\n";
 }
 
 if (!length($AGI{arg_1})) {
@@ -90,6 +90,7 @@ if ($w_reply->{success} eq 'false') {
 	exit;
 }
 
+# Trying to locate answers in predifined fields in Wolframs output. #
 foreach (keys %{$w_reply->{pod}}) {
 	if (/subpod/) {
 		&add_answer("$w_reply->{pod}{$_}{plaintext}\n");
@@ -118,6 +119,7 @@ foreach (keys %{$w_reply->{pod}}) {
 	}
 }
 
+# If the above did't work search for answers all available fields. #
 if (!$results) {
 	foreach (keys %{$w_reply->{pod}}) {
 		eval{ &add_answer("$_: $w_reply->{pod}{$_}{subpod}{plaintext}\n"); };
@@ -126,6 +128,8 @@ if (!$results) {
 		$results++;
 	}
 }
+
+# In case we were not able to locate any answers. #
 if (!$results) {
 	print STDERR "$name Failed to get any answer.\n" if ($debug);
 	&ret_var("Failed to get any answer.");
@@ -135,15 +139,21 @@ if (!$results) {
 }
 exit;
 
+# Parsing each answer line and storing it. #
 sub add_answer {
 	foreach (@_) {
-		s/\n+|\s+/ /g;
+		next if (/HASH\(/);
 		s/\|/,/g;
 		s/"//g;
+		s/(\d+\.\d{4})\d*/$1/g;
+		s/([^.,!?;:])\n+/$1\. /g;
+		s/([.,!?;:])\n+/$1 /g;
+		s/\s+/ /g;
 		$answer .= "$_";
 	}
 }
 
+# Store answers in channel variable. #
 sub ret_var {
 	my $text = shift;
 	print "SET VARIABLE \"$var_name\" \"$text\"\n";
