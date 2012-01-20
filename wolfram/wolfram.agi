@@ -137,9 +137,9 @@ exit;
 
 sub add_answer {
 	foreach (@_) {
-		s/\n+/. /g;
-		s/\s+/ /g;
+		s/\n+|\s+/ /g;
 		s/\|/,/g;
+		s/"//g;
 		$answer .= "$_";
 	}
 }
