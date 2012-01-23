@@ -68,10 +68,10 @@ if (!$app_id) {
 }
 
 if (!length($AGI{arg_1})) {
-	&return_var("No question passed to Wolfram.");
+	&return_var("No text passed to Wolfram.");
 	die "$name No text passed, Aborting.\n";
 }
-&debug_msg("$name Questions is: $AGI{arg_1}", $debug);
+print STDERR "$name Questions is: $AGI{arg_1}\n" if($debug);
 $question = escape($AGI{arg_1});
 
 if ($use_ssl) {
@@ -82,6 +82,7 @@ if ($use_ssl) {
 	$ua = LWP::UserAgent->new;
 }
 
+$ua = LWP::UserAgent->new;
 $ua->agent("Mozilla/5.0 (X11; Linux) AppleWebKit/535.2 (KHTML, like Gecko)");
 $ua->timeout(15);
 my $ua_request = HTTP::Request->new(
@@ -96,7 +97,7 @@ if (!$ua_response->is_success) {
 
 $w_reply = XMLin($ua_response->content);
 if ($w_reply->{success} eq 'false') {
-	&debug_msg("$name Wolfram returned no answer.", $debug);
+	print STDERR "$name Wolfram returned no answer.\n" if ($debug);
 	&return_var("I don't know how to answer that.");
 	exit;
 }
@@ -142,10 +143,10 @@ if (!$results) {
 
 # In case we were not able to locate any answers. #
 if (!$results) {
-	&debug_msg("$name Failed to get any answer.", $debug);
+	print STDERR "$name Failed to get any answer.\n" if ($debug);
 	&return_var("Failed to get any answer.");
 } else {
-	&debug_msg("$name Answer is:$answer", $debug);
+	print STDERR "$name Answer is:$answer\n" if ($debug);
 	&return_var($answer);
 }
 exit;
@@ -167,14 +168,8 @@ sub add_answer {
 # Store answers in channel variable. #
 sub return_var {
 	my $text = shift;
-	&debug_msg("$name Setting: $var_name to: $text", $debug);
+	print STDERR "$name Setting $var_name to $text\n" if ($debug);
 	print "SET VARIABLE \"$var_name\" \"$text\"\n";
-	&checkresponse();
-}
-
-sub debug_msg {
-	my ($db_msg, $db_level) = @_;
-	print "VERBOSE \"$db_msg\" $db_level\n" if ($db_level);
 	&checkresponse();
 }
 
