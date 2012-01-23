@@ -189,7 +189,6 @@ if ($use_ssl) {
 	$ua = LWP::UserAgent->new;
 }
 
-
 $ua->agent("Mozilla/5.0 (X11; Linux) AppleWebKit/535.2 (KHTML, like Gecko)");
 $ua->timeout($ua_timeout);
 $uaresponse = $ua->post(

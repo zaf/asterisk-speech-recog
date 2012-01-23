@@ -15,6 +15,9 @@ perl-XML::Simple  XML API module for Perl.
 An app ID from http://products.wolframalpha.com/api
 Internet access in order to contact WolframAlpha and get the data.
 
+If you plan to use SSL you will need to install the 'IO-Socket-SSL' Perl module
+that implements an interface to SSL sockets.
+
 ------------
 Installation
 ------------
@@ -56,6 +59,17 @@ exten => 1237,n,goto(record)
 
 exten => 1237,n(end),Hangup()
 
+-----------------------
+Security Considerations
+-----------------------
+This script contacts Wolfram servers in order send the query data and get back the
+answers. If you feel that the data you exchange with Wolfram are sensitive or you want to
+make sure that no 3rd party can eavesdrop your communication with the Wolfram service
+it is advised to enable the use of SSL in the script. This will encrypt all the traffic
+between your pbx and Wolframs servers making it much safer.
+To enable the use of SSL set the variable '$use_ssl' to 1 in the script. Keep in mind that
+security comes with a price, the initialisation of the SSL session adds a small delay in
+communication (usually under 1 sec).
 
 -------
 License
