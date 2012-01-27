@@ -14,7 +14,8 @@
 # -----
 # agi(speech-recog.agi,[lang],[timeout],[intkey],[NOBEEP])
 # Records from the current channel untill the timeout (set to 10 seconds by default,
-# -1 for no timeout) is reached or the interrupt key (# by default) is pressed.
+# -1 for no timeout) is reached or the interrupt key (# by default) is pressed or the
+# script detects more than 3 seconds of silence.
 # If NOBEEP is set, no beep sound is played back to the user to indicate the
 # start of the recording.
 # The recorded sound is send over to googles speech recognition service and the
@@ -74,6 +75,7 @@ my $intkey     = "#";
 my $comp_level = -8;
 my $ua_timeout = 10;
 my $timeout    = 10000;
+my $silence    = 3;
 my $tmpdir     = "/tmp";
 my $filetype   = "x-flac";
 my $host       = "www.google.com/speech-api/v1/recognize?xjerr=1&client=chromium";
@@ -159,7 +161,7 @@ $SIG{'HUP'} = \&int_handler;
 print STDERR "$name Recording Format: $format, Rate: $samplerate Hz,
 	Timeout: $timeout ms, Interrupt keys: $intkey\n" if ($debug);
 
-print "RECORD FILE $tmpname $format \"$intkey\" \"$timeout\" $beep\n";
+print "RECORD FILE $tmpname $format \"$intkey\" \"$timeout\" $beep \"s=$silence\"\n";
 @result = &checkresponse();
 die "$name Failed to record file, aborting...\n" if ($result[0] == -1);
 
