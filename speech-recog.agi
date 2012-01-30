@@ -13,11 +13,10 @@
 # Usage
 # -----
 # agi(speech-recog.agi,[lang],[timeout],[intkey],[NOBEEP])
-# Records from the current channel untill the timeout (set to 10 seconds by default,
-# -1 for no timeout) is reached or the interrupt key (# by default) is pressed or the
-# script detects more than 3 seconds of silence.
-# If NOBEEP is set, no beep sound is played back to the user to indicate the
-# start of the recording.
+# Records from the current channel untill 3 seconds of silence are detected
+# (this can be set by the user by the 'timeout' argument, -1 for no timeout) or the
+# interrupt key (# by default) is pressed. If NOBEEP is set, no beep sound is played
+# back to the user to indicate the start of the recording.
 # The recorded sound is send over to googles speech recognition service and the
 # returned text string is assigned as the value of the channel variable 'utterance'.
 # The scripts sets the following channel variables:
@@ -28,11 +27,18 @@
 #     feels about the result. Values bigger than 0.95 usually mean that the
 #     resulted text is correct.
 #
-# Parameters like default language, recording sample rate and use of SSLL for encrypted
-# web traffic can be set up by altering the following variables:
-# Default language:  $language
-# Sample rate:       $samplerate (value in Hz, 8000 or 16000 if used with wideband codecs)
-# SSL:               $use_ssl (0: disable, 1: enable)
+# Parameters like default language, timeout, interrupt key(s), recording sample rate and
+# use of SSL for encrypted web traffic can be set up by altering the following variables:
+# Default language:
+#	$language
+# Default timeout:
+#	$timeout (value in seconds of silence before recording is stopped)
+# Default interupt key:
+#	$intkey (can be any digit from 0 to 9 or # and *, or a combination of them)
+# Sample rate:
+#	$samplerate (value in Hz, 8000 or 16000 if used with wideband codecs)
+# SSL:
+#	$use_ssl (0: disable, 1: enable)
 #
 
 use warnings;
@@ -46,6 +52,12 @@ $| = 1;
 # ----------------------------- #
 # Default language              #
 my $language = "en-US";
+
+# Default max silence timeout   #
+my $timeout    = 3;
+
+# Default interrupt key         #
+my $intkey     = "#";
 
 # Input audio sample rate       #
 my $samplerate = 8000;
@@ -70,12 +82,10 @@ my $uaresponse;
 my %response;
 my $endian;
 my $url;
+my $silence;
 my $beep       = "BEEP";
-my $intkey     = "#";
 my $comp_level = -8;
 my $ua_timeout = 10;
-my $timeout    = 10000;
-my $silence    = 3;
 my $tmpdir     = "/tmp";
 my $filetype   = "x-flac";
 my $host       = "www.google.com/speech-api/v1/recognize?xjerr=1&client=chromium";
@@ -116,14 +126,24 @@ if ($samplerate == 16000) {
 if (length($AGI{arg_1})) {
 	$language = $AGI{arg_1} if ($AGI{arg_1} =~ /^[a-z]{2}(-[a-zA-Z]{2,6})?$/);
 }
+
 if (length($AGI{arg_2})) {
-	$timeout = $AGI{arg_2} if ($AGI{arg_2} == -1);
-	$timeout = $AGI{arg_2} * 1000 if ($AGI{arg_2} =~ /^\d+$/);
+	if ($AGI{arg_2} == -1) {
+		$silence = "";
+	} elsif ($AGI{arg_2} =~ /^\d+$/) {
+		$silence = "s=$AGI{arg_2}";
+	} else {
+		$silence = "s=$timeout";
+	}
+} else {
+	$silence = "s=$timeout";
 }
+
 if (length($AGI{arg_3})) {
 	$intkey = "0123456789#*" if ($AGI{arg_3} eq "any");
 	$intkey = $AGI{arg_3} if ($AGI{arg_3} =~ /^[0-9*#]+$/);
 }
+
 if (length($AGI{arg_4})) {
 	$beep = "" if ($AGI{arg_4} eq "NOBEEP");
 }
@@ -159,9 +179,9 @@ $SIG{'HUP'} = \&int_handler;
 ($fh, $tmpname) = tempfile("stt_XXXXXX", DIR => $tmpdir, UNLINK => 1);
 
 print STDERR "$name Recording Format: $format, Rate: $samplerate Hz,
-	Timeout: $timeout ms, Interrupt keys: $intkey\n" if ($debug);
+	$silence, Interrupt keys: $intkey\n" if ($debug);
 
-print "RECORD FILE $tmpname $format \"$intkey\" \"$timeout\" $beep \"s=$silence\"\n";
+print "RECORD FILE $tmpname $format \"$intkey\" \"-1\" $beep \"$silence\"\n";
 @result = &checkresponse();
 die "$name Failed to record file, aborting...\n" if ($result[0] == -1);
 
@@ -176,8 +196,7 @@ if ($debug) {
 # Encode file to flac. #
 system($flac, $comp_level, "--totally-silent", "--channels=1", "--endian=$endian",
 	"--sign=signed", "--bps=16", "--force-raw-format", "--sample-rate=$samplerate",
-	"$tmpname.$format") == 0
-	or die "$name $flac failed: $?\n";
+	"$tmpname.$format") == 0 or die "$name $flac failed: $?\n";
 
 open($fh, "<", "$tmpname.flac") or die "Can't read file: $!";
 $audio = do { local $/; <$fh> };

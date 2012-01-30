@@ -28,14 +28,14 @@ To make sure check your /etc/asterisk/asterisk.conf file
 Usage
 -----
 agi(speech-recog.agi,[lang],[timeout],[intkey],[NOBEEP])
-Records from the current channel untill the timeout (set to 10 seconds by default,
--1 for no timeout) is reached or the interrupt key (# by default) is pressed or the
-script detects more than 3 seconds of silence.
-If NOBEEP is set, no beep sound is played back to the user to indicate the
-start of the recording.
+Records from the current channel untill 3 seconds of silence are detected
+(this can be set by the user by the 'timeout' argument, -1 for no timeout) or the
+interrupt key (# by default) is pressed. If NOBEEP is set, no beep sound is played
+back to the user to indicate the start of the recording.
 The recorded sound is send over to googles speech recognition service and the
 returned text string is assigned as the value of the channel variable 'utterance'.
 The scripts sets the following channel variables:
+
 status     : Return status. 0 means success, non zero values indicating different errors.
 id         : Some id string that googles engine returns, not very useful(?).
 utterance  : The generated text string.
