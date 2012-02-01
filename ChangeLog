@@ -1,5 +1,15 @@
+2012-02-01 Lefteris Zafiris <zaf.000@gmail.com> - 0.5
+	Added SSL support. Interrupt keys can now be defined
+	by the user. Added (optional) Beep indication before recording.
+	Recording time is now conrtolled by silence detection. There is no
+	absolute timeout, the recording will terminate after a
+	user defined (3 sec by default) period of silence, or the pressing
+	of the interrupt key(s).
+	Added a sample AGI script that submits queries to WolframAlpha and
+	sets the answer as a dialplan variable.
+
 2012-01-10 Lefteris Zafiris <zaf.000@gmail.com> - 0.4
-	Added option for user defined timeout. 
+	Added option for user defined timeout.
 	Remove spaces between digits in returning text string.
 	Documentation updates.
 
