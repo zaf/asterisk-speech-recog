@@ -68,7 +68,9 @@
       <p>Perl: The Perl Programming Language<br/>
 	  perl-libwww: The World-Wide Web library for Perl<br/>
 	  flac: Free Lossless Audio Codec<br/>
-	  Internet access in order to contact google and get the speech data.
+	  Internet access in order to contact google and get the speech data.<br/>
+	  If you plan to use SSL you will need to install the 'IO-Socket-SSL' Perl module
+	  that implements an interface to SSL sockets.
 	  </p>
 
       <h2>Install</h2>
@@ -77,16 +79,17 @@
 	  To make sure check your /etc/asterisk/asterisk.conf file</p>
 
 	  <h2>Usage</h2>
-		<p><b>agi(speech-recog.agi,[lang],[timeout])</b>:  Records from the current channel
-		untill the pound key (#) is pressed or the	timeout (set to 10 seconds by default,
-		-1 for no timeout) is reached. The recording is send over to googles speech
-		recognition service and the returned text string is assigned as the value of the
-		channel variable 'utterance'.<br/>
+		<p><b>agi(speech-recog.agi,[lang],[timeout],[intkey],[NOBEEP])</b>:  Records from the current channel
+		untill 3 seconds of silence are detected (setting the 'timeout'
+		argument to -1 disables the silence detenction) or the interrupt key (# by default) is pressed.
+		If NOBEEP is set, no beep sound is played back to the user to indicate the start of the recording.
+		The recorded sound is send over to googles speech recognition service and the
+		returned text string is assigned as the value of the channel variable 'utterance'.<br/>
 		The scripts sets the following channel variables:<br/>
 		<b>status:</b> Return status. 0 means success, non zero values indicating different errors.<br/>
 		<b>utterance:</b> The generated text string.<br/>
 		<b>confidence:</b> A value between 0 and 1 indicating the probability of a correct
-		recognition.Values bigger than 0.95 usually mean that the resulted text is correct.<br/>
+		recognition.Values bigger than 0.90 usually mean that the resulted text is correct.<br/>
 		<b>id:</b> Some id string that googles engine returns, not very useful(?).
 	  </p>
 
@@ -182,7 +185,7 @@ exten => 1237,n(end),Hangup()
 
     <h2>Download</h2>
     <p>
-	  You can get the latest stable version <a href="https://github.com/downloads/zaf/asterisk-speech-recog/asterisk-speech-recog-0.4.tar.gz">here</a>.<br />
+	  You can get the latest stable version <a href="https://github.com/downloads/zaf/asterisk-speech-recog/asterisk-speech-recog-0.5.tar.gz">here</a>.<br />
       Develompent snapshots are available in either
       <a href="https://github.com/zaf/asterisk-speech-recog/zipball/master">zip</a> or
       <a href="https://github.com/zaf/asterisk-speech-recog/tarball/master">tar formats.
