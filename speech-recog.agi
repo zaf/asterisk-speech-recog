@@ -37,6 +37,9 @@
 #	$intkey (can be any digit from 0 to 9 or # and *, or a combination of them)
 # Sample rate:
 #	$samplerate (value in Hz, 8000 or 16000 if used with wideband codecs)
+# Encode voice using speex:
+#   $use_speex (0: disable, 1: enable) **_Highly experimental_**
+#   works only with patched speex encoder that supports MIME "x-speex-with-header-byte"
 # SSL:
 #	$use_ssl (0: disable, 1: enable)
 #
@@ -62,6 +65,9 @@ my $intkey     = "#";
 # Input audio sample rate       #
 my $samplerate = 8000;
 
+# Use speex                     #
+my $use_speex = 0;
+
 # Use SSL                       #
 my $use_ssl = 0;
 
@@ -83,16 +89,15 @@ my %response;
 my $endian;
 my $url;
 my $silence;
+my $filetype;
 my $beep       = "BEEP";
 my $comp_level = -8;
 my $ua_timeout = 10;
 my $tmpdir     = "/tmp";
-my $filetype   = "x-flac";
 my $host       = "www.google.com/speech-api/v1/recognize?xjerr=1&client=chromium";
 my $flac       = `/usr/bin/which flac`;
-
-# Check endianness #
-$endian = (unpack("h*", pack("s", 1)) =~ /01/) ? "big" : "little";
+# ugly hardcoded path is ugly, make sure to change this #
+my $speex      = "/home/zaf/bin/speexenc";
 
 # Store AGI input #
 while (<STDIN>) {
@@ -189,12 +194,23 @@ if ($debug) {
 	print STDERR "$name Failed to play file\n" if ($result[0] == -1);
 }
 
-# Encode file to flac. #
-system($flac, $comp_level, "--totally-silent", "--channels=1", "--endian=$endian",
-	"--sign=signed", "--bps=16", "--force-raw-format", "--sample-rate=$samplerate",
-	"$tmpname.$format") == 0 or die "$name $flac failed: $?\n";
+if ($use_speex) {
+	$filetype = "x-speex-with-header-byte";
+	$endian = (unpack("h*", pack("s", 1)) =~ /01/) ? "--be" : "--le";
+	# Encode file to speex. #
+	system($speex, "--quality", "3", "--vbr", "--rate", $samplerate, "--headerbyte",
+		$endian, "$tmpname.$format", "$tmpname.spx") == 0 or die "$name $speex failed: $?\n";
+	open($fh, "<", "$tmpname.spx") or die "Can't read file: $!";
+} else {
+	$filetype = "x-flac";
+	$endian = (unpack("h*", pack("s", 1)) =~ /01/) ? "big" : "little";
+	# Encode file to flac. #
+	system($flac, $comp_level, "--totally-silent", "--channels=1", "--endian=$endian",
+		"--sign=signed", "--bps=16", "--force-raw-format", "--sample-rate=$samplerate",
+		"$tmpname.$format") == 0 or die "$name $flac failed: $?\n";
+	open($fh, "<", "$tmpname.flac") or die "Can't read file: $!";
+}
 
-open($fh, "<", "$tmpname.flac") or die "Can't read file: $!";
 $audio = do { local $/; <$fh> };
 close($fh);
 
@@ -218,7 +234,7 @@ die "$name Unable to get speech data.\n" if (!$uaresponse->is_success);
 if ($uaresponse->content =~ /^\{"status":(\d*),"id":"(.*)","hypotheses":\[(.*)\]\}$/) {
 	$response{status} = "$1";
 	$response{id}     = "$2";
-	print STDERR "Error reading audio file\n" if ($response{status} == 5);
+	print STDERR "$name Error reading audio file\n" if ($response{status} == 5);
 	if ($3 =~ /^\{"utterance":"(.*)","confidence":(.*)\}/) {
 		$response{utterance}  = "$1";
 		$response{confidence} = "$2";
