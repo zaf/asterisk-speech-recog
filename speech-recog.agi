@@ -47,6 +47,7 @@
 
 use warnings;
 use strict;
+use File::Copy qw(move);
 use File::Temp qw(tempfile);
 use LWP::UserAgent;
 $| = 1;
@@ -58,7 +59,7 @@ $| = 1;
 my $language = "en-US";
 
 # Default max silence timeout   #
-my $timeout    = 3;
+my $timeout    = 2;
 
 # Default interrupt key         #
 my $intkey     = "#";
@@ -185,16 +186,15 @@ $SIG{'HUP'} = \&int_handler;
 
 # Record file #
 ($fh, $tmpname) = tempfile("stt_XXXXXX", DIR => $tmpdir, UNLINK => 1);
-
-print STDERR "$name Recording Format: $format, Rate: $samplerate Hz,
-	$silence, Interrupt keys: $intkey\n" if ($debug);
-
 print "RECORD FILE $tmpname $format \"$intkey\" \"-1\" $beep \"$silence\"\n";
 @result = &checkresponse();
 die "$name Failed to record file, aborting...\n" if ($result[0] == -1);
 
 if ($debug) {
-	print STDERR "$name Languge: $language,  SSL: $use_ssl\n";
+	print STDERR "$name Recording Format: $format, Rate: $samplerate Hz, ",
+		"Encoding format: ", ($use_speex) ? "speex" : "flac", "\n",
+		"$name Languge: $language, SSL: ", ($use_ssl) ? "yes, " : "no, ",
+		"$silence, Interrupt keys: $intkey\n";
 	print STDERR "$name Playing back recorded file.\n";
 	print "STREAM FILE $tmpname \"\"\n";
 	@result = &checkresponse();
@@ -205,8 +205,8 @@ if ($use_speex) {
 	$filetype = "x-speex-with-header-byte";
 	$endian = (unpack("h*", pack("s", 1)) =~ /01/) ? "--be" : "--le";
 	# Encode file to speex. #
-	system($speex, "--quality", "3", "--vbr", "--denoise", "--rate", $samplerate,
-		"--headerbyte", $endian, "$tmpname.$format", "$tmpname.spx") == 0
+	system($speex, "--quality", "3", "--vbr", "--agc", "--denoise", "--rate", $samplerate,
+		"--headerbyte", "--quiet", $endian, "$tmpname.$format", "$tmpname.spx") == 0
 		or die "$name $speex failed: $?\n";
 	open($fh, "<", "$tmpname.spx") or die "Can't read file: $!";
 } else {
@@ -243,6 +243,14 @@ if ($uaresponse->content =~ /^\{"status":(\d*),"id":"(.*)","hypotheses":\[(.*)\]
 	$response{status} = "$1";
 	$response{id}     = "$2";
 	print STDERR "$name Error reading audio file\n" if ($response{status} == 5);
+	if ($use_speex && $debug) {
+	# Save voice samples for debugging purposes #
+		if ($response{status} == 5) {
+			move("$tmpname.spx", "$tmpname-fail.spx");
+		} else {
+			move("$tmpname.spx", "$tmpname-success.spx");
+		}
+	}
 	if ($3 =~ /^\{"utterance":"(.*)","confidence":(.*)\}/) {
 		$response{utterance}  = "$1";
 		$response{confidence} = "$2";
@@ -288,6 +296,6 @@ sub int_handler {
 END {
 	if ($tmpname) {
 		print STDERR "$name Cleaning temp files.\n" if ($debug);
-		unlink glob "$tmpname*";
+		unlink glob "$tmpname.*";
 	}
 }

@@ -1,3 +1,11 @@
+2012-02-28 Lefteris Zafiris <zaf.000@gmail.com> - 0.6-beta1
+	Added support for speex encoded voice data.
+	Works only with patched speex encoder that
+	supports MIME "x-speex-with-header-byte":
+	https://github.com/zaf/Speex-with-header-bytes
+	Speex support is experimental and detection rates are
+	lower compared to flac encoded data.
+
 2012-02-01 Lefteris Zafiris <zaf.000@gmail.com> - 0.5
 	Added SSL support. Interrupt keys can now be defined
 	by the user. Added (optional) Beep indication before recording.
