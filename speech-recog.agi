@@ -40,6 +40,7 @@
 # Encode voice using speex:
 #   $use_speex (0: disable, 1: enable) **_Highly experimental_**
 #   works only with patched speex encoder that supports MIME "x-speex-with-header-byte"
+#   https://github.com/zaf/Speex-with-header-bytes
 # SSL:
 #	$use_ssl (0: disable, 1: enable)
 #
@@ -96,6 +97,7 @@ my $ua_timeout = 10;
 my $tmpdir     = "/tmp";
 my $host       = "www.google.com/speech-api/v1/recognize?xjerr=1&client=chromium";
 my $flac       = `/usr/bin/which flac`;
+#my $speex     = `/usr/bin/which speexenc`;
 # ugly hardcoded path is ugly, make sure to change this #
 my $speex      = "/home/zaf/bin/speexenc";
 
@@ -110,10 +112,15 @@ while (<STDIN>) {
 $name = " -- $AGI{request}:";
 
 # Abort if required programs not found. #
-die "$name flac is missing. Aborting.\n" if (!$flac);
-
-chomp($flac);
-print STDERR "$name Found flac in: $flac\n" if ($debug);
+if ($use_speex) {
+	die "$name speexenc is missing. Aborting.\n" if (!$speex);
+	chomp($speex);
+	print STDERR "$name Found speexenc in: $speex\n" if ($debug);
+} else {
+	die "$name flac is missing. Aborting.\n" if (!$flac);
+	chomp($flac);
+	print STDERR "$name Found flac in: $flac\n" if ($debug);
+}
 
 # Setting recording file format according to sample rate. #
 if ($samplerate == 16000) {
@@ -198,8 +205,9 @@ if ($use_speex) {
 	$filetype = "x-speex-with-header-byte";
 	$endian = (unpack("h*", pack("s", 1)) =~ /01/) ? "--be" : "--le";
 	# Encode file to speex. #
-	system($speex, "--quality", "3", "--vbr", "--rate", $samplerate, "--headerbyte",
-		$endian, "$tmpname.$format", "$tmpname.spx") == 0 or die "$name $speex failed: $?\n";
+	system($speex, "--quality", "3", "--vbr", "--denoise", "--rate", $samplerate,
+		"--headerbyte", $endian, "$tmpname.$format", "$tmpname.spx") == 0
+		or die "$name $speex failed: $?\n";
 	open($fh, "<", "$tmpname.spx") or die "Can't read file: $!";
 } else {
 	$filetype = "x-flac";
