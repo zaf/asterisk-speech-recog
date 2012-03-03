@@ -27,20 +27,24 @@
 #     feels about the result. Values bigger than 0.95 usually mean that the
 #     resulted text is correct.
 #
-# Parameters like default language, timeout, interrupt key(s), recording sample rate and
-# use of SSL for encrypted web traffic can be set up by altering the following variables:
+# User defined parameters:
 # Default language:
 #	$language
+#
 # Default timeout:
 #	$timeout (value in seconds of silence before recording is stopped)
+#
 # Default interupt key:
 #	$intkey (can be any digit from 0 to 9 or # and *, or a combination of them)
+#
 # Sample rate:
 #	$samplerate (value in Hz, 8000 or 16000 if used with wideband codecs)
+#
 # Encode voice using speex:
 #   $use_speex (0: disable, 1: enable) **_Highly experimental_**
 #   works only with patched speex encoder that supports MIME "x-speex-with-header-byte"
 #   https://github.com/zaf/Speex-with-header-bytes
+#
 # SSL:
 #	$use_ssl (0: disable, 1: enable)
 #
@@ -111,6 +115,11 @@ while (<STDIN>) {
 ($AGI{arg_1}, $AGI{arg_2}, $AGI{arg_3}, $AGI{arg_4}) = @ARGV;
 
 $name = " -- $AGI{request}:";
+
+# if ($debug) {
+# 	print STDERR "$name AGI Environment Dump:\n";
+# 	print STDERR "$name $_ = $AGI{$_}\n" foreach (sort keys %AGI);
+# }
 
 # Abort if required programs not found. #
 if ($use_speex) {
@@ -205,7 +214,7 @@ if ($use_speex) {
 	$filetype = "x-speex-with-header-byte";
 	$endian = (unpack("h*", pack("s", 1)) =~ /01/) ? "--be" : "--le";
 	# Encode file to speex. #
-	system($speex, "--quality", "3", "--vbr", "--agc", "--denoise", "--rate", $samplerate,
+	system($speex, "--quality", "3", "--vbr", "--denoise", "--rate", $samplerate,
 		"--headerbyte", "--quiet", $endian, "$tmpname.$format", "$tmpname.spx") == 0
 		or die "$name $speex failed: $?\n";
 	open($fh, "<", "$tmpname.spx") or die "Can't read file: $!";
@@ -242,15 +251,21 @@ die "$name Unable to get speech data.\n" if (!$uaresponse->is_success);
 if ($uaresponse->content =~ /^\{"status":(\d*),"id":"(.*)","hypotheses":\[(.*)\]\}$/) {
 	$response{status} = "$1";
 	$response{id}     = "$2";
-	print STDERR "$name Error reading audio file\n" if ($response{status} == 5);
-	if ($use_speex && $debug) {
-	# Save voice samples for debugging purposes #
-		if ($response{status} == 5) {
-			move("$tmpname.spx", "$tmpname-fail.spx");
-		} else {
-			move("$tmpname.spx", "$tmpname-success.spx");
-		}
-	}
+	print STDERR "$name Error reading audio file\n" if ($response{status} != 0);
+#	# Save voice samples for debugging purposes #
+# 	if ($use_speex && $debug) {
+# 		if ($response{status} == 0) {
+# 			move("$tmpname.spx", "$tmpname-success.spx");
+# 		} else {
+# 			move("$tmpname.spx", "$tmpname-fail.spx");
+# 		}
+# 	} elsif (!$use_speex && $debug) {
+# 		if ($response{status} == 0) {
+# 			move("$tmpname.flac", "$tmpname-success.flac");
+# 		} else {
+# 			move("$tmpname.flac", "$tmpname-fail.flac");
+# 		}
+# 	}
 	if ($3 =~ /^\{"utterance":"(.*)","confidence":(.*)\}/) {
 		$response{utterance}  = "$1";
 		$response{confidence} = "$2";
