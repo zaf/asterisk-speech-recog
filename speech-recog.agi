@@ -169,11 +169,11 @@ if (length($AGI{arg_4})) {
 # Answer channel if not already answered #
 print STDERR "$name Checking channel status.\n" if ($debug);
 print "CHANNEL STATUS\n";
-@result = &checkresponse();
+@result = checkresponse();
 if ($result[0] == 4) {
 	print STDERR "$name Answering channel.\n" if ($debug);
 	print "ANSWER\n";
-	&checkresponse();
+	checkresponse();
 }
 
 # Reset variables. #
@@ -186,7 +186,7 @@ if ($result[0] == 4) {
 print STDERR "$name Clearing channel variables.\n" if ($debug);
 foreach (keys %response) {
 	print "SET VARIABLE \"$_\" \"$response{$_}\"\n";
-	&checkresponse();
+	checkresponse();
 }
 
 # Hnadle interrupts #
@@ -196,7 +196,7 @@ $SIG{'HUP'} = \&int_handler;
 # Record file #
 ($fh, $tmpname) = tempfile("stt_XXXXXX", DIR => $tmpdir, UNLINK => 1);
 print "RECORD FILE $tmpname $format \"$intkey\" \"-1\" $beep \"$silence\"\n";
-@result = &checkresponse();
+@result = checkresponse();
 die "$name Failed to record file, aborting...\n" if ($result[0] == -1);
 
 if ($debug) {
@@ -206,7 +206,7 @@ if ($debug) {
 		"$silence, Interrupt keys: $intkey\n";
 	print STDERR "$name Playing back recorded file.\n";
 	print "STREAM FILE $tmpname \"\"\n";
-	@result = &checkresponse();
+	@result = checkresponse();
 	print STDERR "$name Failed to play file\n" if ($result[0] == -1);
 }
 
@@ -279,7 +279,7 @@ print STDERR "$name The response was:\n", $uaresponse->content if ($debug);
 foreach (keys %response) {
 	print STDERR "$name Setting variable: $_ = $response{$_}\n" if ($debug);
 	print "SET VARIABLE \"$_\" \"$response{$_}\"\n";
-	&checkresponse();
+	checkresponse();
 }
 exit;
 

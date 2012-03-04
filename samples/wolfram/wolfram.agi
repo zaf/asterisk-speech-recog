@@ -63,12 +63,12 @@ while (<STDIN>) {
 $name = " -- $AGI{request}:";
 
 if (!$app_id) {
-	&return_var("You must have an Application ID from WolframAlpha to use this script.");
+	return_var("You must have an Application ID from WolframAlpha to use this script.");
 	die "$name You must have an Application ID from WolframAlpha to use this script.\n";
 }
 
 if (!length($AGI{arg_1})) {
-	&return_var("No text passed to Wolfram.");
+	return_var("No text passed to Wolfram.");
 	die "$name No text passed, Aborting.\n";
 }
 print STDERR "$name Questions is: $AGI{arg_1}\n" if($debug);
@@ -90,40 +90,40 @@ my $ua_request = HTTP::Request->new(
 );
 my $ua_response = $ua->request($ua_request);
 if (!$ua_response->is_success) {
-	&return_var("Failed to contact Wolfram server.");
+	return_var("Failed to contact Wolfram server.");
 	die "$name Failed to contact server.";
 }
 
 $w_reply = XMLin($ua_response->content);
 if ($w_reply->{success} eq 'false') {
 	print STDERR "$name Wolfram returned no answer.\n" if ($debug);
-	&return_var("I don't know how to answer that.");
+	return_var("I don't know how to answer that.");
 	exit;
 }
 
 # Trying to locate answers in predifined fields in Wolframs output. #
 foreach (keys %{$w_reply->{pod}}) {
 	if (/subpod/) {
-		&add_answer("$w_reply->{pod}{$_}{plaintext}\n");
+		add_answer("$w_reply->{pod}{$_}{plaintext}\n");
 		$results++;
 		last;
 	} elsif (/Result|Value/) {
-		eval{ &add_answer("$w_reply->{pod}{$_}{subpod}{plaintext}\n"); };
-		eval{ &add_answer("$w_reply->{pod}{$_}{subpod}[0]{plaintext}\n"); };
-		eval{ &add_answer("$w_reply->{pod}{$_}{subpod}[1]{plaintext}\n"); };
+		eval{ add_answer("$w_reply->{pod}{$_}{subpod}{plaintext}\n"); };
+		eval{ add_answer("$w_reply->{pod}{$_}{subpod}[0]{plaintext}\n"); };
+		eval{ add_answer("$w_reply->{pod}{$_}{subpod}[1]{plaintext}\n"); };
 		$results++;
 		last;
 	} elsif (/Definition:WordData|Basic:ChemicalData|ComparisonAsLength|Comparison|
 				BasicInformation|NotableFacts:PeopleData|Basic|Properties/x
 			) {
-		&add_answer("$w_reply->{pod}{$_}{subpod}{plaintext}\n");
+		add_answer("$w_reply->{pod}{$_}{subpod}{plaintext}\n");
 		$results++;
 	} elsif (/WeatherForecast:WeatherData/) {
-		&add_answer("$w_reply->{pod}{$_}{subpod}[0]{title} ",
+		add_answer("$w_reply->{pod}{$_}{subpod}[0]{title} ",
 			"$w_reply->{pod}{$_}{subpod}[0]{plaintext}\n");
-		&add_answer("$w_reply->{pod}{$_}{subpod}[1]{title} ",
+		add_answer("$w_reply->{pod}{$_}{subpod}[1]{title} ",
 			"$w_reply->{pod}{$_}{subpod}[1]{plaintext}\n");
-		eval{ &add_answer("$w_reply->{pod}{$_}{subpod}[2]{title} ",
+		eval{ add_answer("$w_reply->{pod}{$_}{subpod}[2]{title} ",
 			"$w_reply->{pod}{$_}{subpod}[2]{plaintext}\n"); };
 		$results++;
 		last;
@@ -133,9 +133,9 @@ foreach (keys %{$w_reply->{pod}}) {
 # If the above did't work search for answers all available fields. #
 if (!$results) {
 	foreach (keys %{$w_reply->{pod}}) {
-		eval{ &add_answer("$_: $w_reply->{pod}{$_}{subpod}{plaintext}\n"); };
-		eval{ &add_answer("$_: $w_reply->{pod}{$_}{subpod}[0]{plaintext}\n"); };
-		eval{ &add_answer("$_: $w_reply->{pod}{$_}{subpod}[1]{plaintext}\n"); };
+		eval{ add_answer("$_: $w_reply->{pod}{$_}{subpod}{plaintext}\n"); };
+		eval{ add_answer("$_: $w_reply->{pod}{$_}{subpod}[0]{plaintext}\n"); };
+		eval{ add_answer("$_: $w_reply->{pod}{$_}{subpod}[1]{plaintext}\n"); };
 		$results++;
 	}
 }
@@ -143,10 +143,10 @@ if (!$results) {
 # In case we were not able to locate any answers. #
 if (!$results) {
 	print STDERR "$name Failed to get any answer.\n" if ($debug);
-	&return_var("Failed to get any answer.");
+	return_var("Failed to get any answer.");
 } else {
 	print STDERR "$name Answer is:$answer\n" if ($debug);
-	&return_var($answer);
+	return_var($answer);
 }
 exit;
 
@@ -169,7 +169,7 @@ sub return_var {
 	my $text = shift;
 	print STDERR "$name Setting $var_name to $text\n" if ($debug);
 	print "SET VARIABLE \"$var_name\" \"$text\"\n";
-	&checkresponse();
+	checkresponse();
 }
 
 sub checkresponse {
