@@ -87,6 +87,7 @@ foreach my $file (@file_list) {
 		$response{id}     = "$2";
 		if ($response{status} != 0) {
 			say_msg("Error reading audio file");
+			exit 1;
 		}
 		if ($3 =~ /^\{"utterance":"(.*)","confidence":(.*)\}/) {
 			$response{utterance}  = "$1";
@@ -98,7 +99,7 @@ foreach my $file (@file_list) {
 	} else {
 		print "$response{utterance}\n";
 	}
-	print $response->content;
+	#print $response->content;
 }
 exit 0;
 
