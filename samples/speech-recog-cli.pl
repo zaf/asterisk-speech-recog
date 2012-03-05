@@ -9,7 +9,7 @@
 # the GNU General Public License Version 2. See the COPYING file
 # at the top of the source tree.
 #
-# The script takes as input flac, speex or wav files at 8kHz and returns the following values:
+# The script takes as input flac, speex or wav files and returns the following values:
 # status     : Return status. 0 means success, non zero values indicating different errors.
 # id         : Some id string that googles engine returns, not very useful(?).
 # utterance  : The generated text string.
@@ -27,81 +27,135 @@ use LWP::UserAgent;
 
 my %options;
 my $filetype;
-my $url        = "http://www.google.com/speech-api/v1/recognize?xjerr=1&client=chromium";
+my $audio;
+my $ua;
+my $url;
+my $host       = "www.google.com/speech-api/v1/recognize";
 my $samplerate = 8000;
 my $language   = "en-US";
+my $output     = "detailed";
 my $results    = 1;
+my $pro_filter = 0;
+my $error      = 0;
 
-getopts('l:r:hq', \%options);
+getopts('l:o:r:n:fshq', \%options);
 
 VERSION_MESSAGE() if (defined $options{h} || !@ARGV);
 
-if (defined $options{l}) {
-# check if language setting is valid #
-	if ($options{l} =~ /^[a-z]{2}(-[a-zA-Z]{2,6})?$/) {
-		$language = $options{l};
-	} else {
-		say_msg("Invalid language setting. Using default.");
-	}
-}
+parse_options();
 
-if (defined $options{r}) {
-# set number or results #
-	$results = $options{r} if ($options{r} =~ /%d+/);
-}
+$ua->agent("Mozilla/5.0 (X11; Linux) AppleWebKit/535.2 (KHTML, like Gecko)");
+$ua->timeout(20);
 
-my @file_list  = @ARGV;
-
-foreach my $file (@file_list) {
+# send each sound file to google and get the recognition results #
+foreach my $file (@ARGV) {
 	my($filename, $dir, $ext) = fileparse($file, qr/\.[^.]*/);
 	if ($ext ne ".flac" && $ext ne ".spx" && $ext ne ".wav") {
-		say_msg("Unsupported filetype: $ext");
-		exit 1;
+		say_msg("Unsupported filetype: $ext\n");
+		++$error;
+		next;
 	}
-
 	if ($ext eq ".flac") {
 		$filetype   = "x-flac";
 	} elsif ($ext eq ".spx") {
 		$filetype   = "x-speex-with-header-byte";
 	} elsif ($ext eq ".wav") {
 		$filetype   = "x-flac";
-		$file = encode_flac($file);
+		if (($file = encode_flac($file)) eq '-1') {
+			++$error;
+			next;
+		}
+	}
+	say_msg("Openning $file");
+	if (open(my $fh, "<", "$file")) {
+		$audio = do { local $/; <$fh> };
+		close($fh);
+	} else {
+		say_msg("Cant read file $file.\n");
+		++$error;
+		next;
 	}
 
-	say_msg("Openning $file");
-	open(my $fh, "<", "$file") or die "Cant read file: $!";
-	my $audio = do { local $/; <$fh> };
-	close($fh);
-	my $ua = LWP::UserAgent->new;
-	$ua->agent("Mozilla/5.0 (X11; Linux) AppleWebKit/535.2 (KHTML, like Gecko)");
-	$ua->timeout(20);
 	my $response = $ua->post(
-		"$url&lang=$language&maxresults=$results",
+		"$url?xjerr=1&client=chromium&lang=$language&pfilter=$pro_filter&maxresults=$results",
 		Content_Type => "audio/$filetype; rate=$samplerate",
 		Content      => "$audio",
 	);
-	last if (!$response->is_success);
+	if (!$response->is_success) {
+		say_msg("Failed to get data for file:$file.\n");
+		++$error;
+		next;
+	}
 	my %response;
-	if ($response->content =~ /^\{"status":(\d*),"id":"(.*)","hypotheses":\[(.*)\]\}$/) {
+	if ($response->content =~ /^\{"status":(\d*),"id":"([0-9a-z\-]*)","hypotheses":\[(.*)\]\}$/) {
 		$response{status} = "$1";
 		$response{id}     = "$2";
 		if ($response{status} != 0) {
 			say_msg("Error reading audio file");
-			exit 1;
+			++$error;
 		}
-		if ($3 =~ /^\{"utterance":"(.*)","confidence":(.*)\}/) {
-			$response{utterance}  = "$1";
-			$response{confidence} = "$2";
+
+		foreach (split(/,/, $3)) {
+			$response{confidence} = $1 if /"confidence":([0-9.]+)/;
+			push(@{$response{utterance}}, "$1") if /"utterance":"(.*?)"/gs;
 		}
 	}
-	if (!defined $options{q}) {
-		printf "%-10s : %s\n", $_, $response{$_} foreach (keys %response);
-	} else {
-		print "$response{utterance}\n";
+	if ($output eq "detailed") {
+		foreach my $key (keys %response) {
+			if ($key eq "utterance") {
+				printf "%-10s : %s\n", $key, $_ foreach (@{$response{$key}});
+			} else {
+				printf "%-10s : %s\n", $key, $response{$key};
+			}
+		}
+	} elsif ($output eq "compact") {
+		print "$_\n" foreach (@{$response{utterance}});
+	} elsif ($output eq "raw") {
+		print $response->content;
 	}
-	#print $response->content;
 }
-exit 0;
+
+exit(($error) ? 1 : 0);
+
+sub parse_options {
+# Command line options parsing #
+	if (defined $options{l}) {
+	# check if language setting is valid #
+		if ($options{l} =~ /^[a-z]{2}(-[a-zA-Z]{2,6})?$/) {
+			$language = $options{l};
+		} else {
+			say_msg("Invalid language setting. Using default.\n");
+		}
+	}
+	if (defined $options{o}) {
+	# check if output setting is valid #
+		if ($options{o} =~ /^(detailed|compact|raw)$/) {
+			$output = $options{o};
+		} else {
+			say_msg("Invalid output formatting setting. Using default.\n");
+		}
+	}
+	if (defined $options{n}) {
+	# set number or results #
+		$results = $options{n} if ($options{n} =~ /\d+/);
+	}
+	if (defined $options{r}) {
+	# set audio sampling rate #
+		$samplerate = $options{r} if ($options{r} =~ /\d+/);
+	}
+	if (defined $options{s}) {
+	# Set up connection type #
+		$url = "https://" . $host;
+		$ua = LWP::UserAgent->new(ssl_opts => {verify_hostname => 1});
+	} else {
+		$url = "http://" . $host;
+		$ua = LWP::UserAgent->new;
+	}
+	# set profanity filter #
+	$pro_filter = 2 if (defined $options{f});
+
+	return;
+}
 
 sub encode_flac {
 # Encode file to flac and return the filename #
@@ -111,7 +165,7 @@ sub encode_flac {
 
 	if (!$flac) {
 		say_msg("flac encoder is missing. Aborting.");
-		exit 1;
+		return -1;
 	}
 	chomp($flac);
 
@@ -122,7 +176,7 @@ sub encode_flac {
 	);
 	if (system($flac, "-8", "-f", "--totally-silent", "-o", "$tmpname", "$file")) {
 		say_msg("$flac failed to encode file.");
-		exit 1;
+		return -1;
 	}
 	return $tmpname;
 }
@@ -137,9 +191,16 @@ sub VERSION_MESSAGE {
 	print "Speech recognition using google voice API.\n\n",
 		 "Usage: $0 [options] [file(s)]\n\n",
 		 "Supported options:\n",
-		 " -l <lang>      specify the language to use, defaults to 'en-US' (English)\n",
-		 " -r <number>    specify the number of results\n",
-		 " -q             Return only recognised utterance. Don't print any messages or warnings\n",
+		 " -l <lang>      specify the language to use (default 'en-US')\n",
+		 " -o <type>      specify the type of output fomratting\n",
+		 "    detailed    print detailed info like confidence and return status (default)\n",
+		 "    compact     print only the recognized utterance\n",
+		 "    raw         raw JSON output\n",
+		 " -r <rate>      specify the audio sample rate in Hz (deafult 8000)\n",
+		 " -n <number>    specify the maximum number of results (default 1)\n",
+		 " -f             filter out profanities\n",
+		 " -s             use SSL to encrypt web trafic\n",
+		 " -q             don't print any error messages or warnings\n",
 		 " -h             this help message\n\n";
-	exit 1;
+	exit(1);
 }

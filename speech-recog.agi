@@ -40,6 +40,9 @@
 # Sample rate:
 #	$samplerate (value in Hz, 8000 or 16000 if used with wideband codecs)
 #
+# Profanity filter:
+#	$pro_filter (0:disable, 1: remove profanities, 2: mask profanities)
+#
 # Encode voice using speex:
 #   $use_speex (0: disable, 1: enable) **_Highly experimental_**
 #   works only with patched speex encoder that supports MIME "x-speex-with-header-byte"
@@ -71,6 +74,9 @@ my $intkey     = "#";
 # Input audio sample rate       #
 my $samplerate = 8000;
 
+# Profanity filter              #
+my $pro_filter = 0;
+
 # Use speex                     #
 my $use_speex = 0;
 
@@ -100,7 +106,7 @@ my $beep       = "BEEP";
 my $comp_level = -8;
 my $ua_timeout = 10;
 my $tmpdir     = "/tmp";
-my $host       = "www.google.com/speech-api/v1/recognize?xjerr=1&client=chromium";
+my $host       = "www.google.com/speech-api/v1/recognize";
 my $flac       = `/usr/bin/which flac`;
 #my $speex     = `/usr/bin/which speexenc`;
 # ugly hardcoded path is ugly, make sure to change this #
@@ -242,7 +248,7 @@ if ($use_ssl) {
 $ua->agent("Mozilla/5.0 (X11; Linux) AppleWebKit/535.2 (KHTML, like Gecko)");
 $ua->timeout($ua_timeout);
 $uaresponse = $ua->post(
-	"$url&lang=$language",
+	"$url?xjerr=1&client=chromium&lang=$language&pfilter=$pro_filter",
 	Content_Type => "audio/$filetype; rate=$samplerate",
 	Content      => "$audio",
 );
