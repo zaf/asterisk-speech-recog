@@ -66,10 +66,10 @@ $| = 1;
 my $language = "en-US";
 
 # Default max silence timeout   #
-my $timeout    = 2;
+my $timeout = 2;
 
 # Default interrupt key         #
-my $intkey     = "#";
+my $intkey = "#";
 
 # Input audio sample rate       #
 my $samplerate = 8000;
@@ -123,19 +123,19 @@ while (<STDIN>) {
 $name = " -- $AGI{request}:";
 
 # if ($debug) {
-# 	print STDERR "$name AGI Environment Dump:\n";
-# 	print STDERR "$name $_ = $AGI{$_}\n" foreach (sort keys %AGI);
+# 	warn "$name AGI Environment Dump:\n";
+# 	warn "$name $_ = $AGI{$_}\n" foreach (sort keys %AGI);
 # }
 
 # Abort if required programs not found. #
 if ($use_speex) {
 	die "$name speexenc is missing. Aborting.\n" if (!$speex);
 	chomp($speex);
-	print STDERR "$name Found speexenc in: $speex\n" if ($debug);
+	warn "$name Found speexenc in: $speex\n" if ($debug);
 } else {
 	die "$name flac is missing. Aborting.\n" if (!$flac);
 	chomp($flac);
-	print STDERR "$name Found flac in: $flac\n" if ($debug);
+	warn "$name Found flac in: $flac\n" if ($debug);
 }
 
 # Setting recording file format according to sample rate. #
@@ -173,11 +173,11 @@ if (length($AGI{arg_4})) {
 }
 
 # Answer channel if not already answered #
-print STDERR "$name Checking channel status.\n" if ($debug);
+warn "$name Checking channel status.\n" if ($debug);
 print "CHANNEL STATUS\n";
 @result = checkresponse();
 if ($result[0] == 4) {
-	print STDERR "$name Answering channel.\n" if ($debug);
+	warn "$name Answering channel.\n" if ($debug);
 	print "ANSWER\n";
 	checkresponse();
 }
@@ -189,7 +189,7 @@ if ($result[0] == 4) {
 	id         => -1,
 	confidence => -1,
 );
-print STDERR "$name Clearing channel variables.\n" if ($debug);
+warn "$name Clearing channel variables.\n" if ($debug);
 foreach (keys %response) {
 	print "SET VARIABLE \"$_\" \"$response{$_}\"\n";
 	checkresponse();
@@ -206,14 +206,14 @@ print "RECORD FILE $tmpname $format \"$intkey\" \"-1\" $beep \"$silence\"\n";
 die "$name Failed to record file, aborting...\n" if ($result[0] == -1);
 
 if ($debug) {
-	print STDERR "$name Recording Format: $format, Rate: $samplerate Hz, ",
+	warn "$name Recording Format: $format, Rate: $samplerate Hz, ",
 		"Encoding format: ", ($use_speex) ? "speex" : "flac", "\n",
 		"$name Languge: $language, SSL: ", ($use_ssl) ? "yes, " : "no, ",
 		"$silence, Interrupt keys: $intkey\n";
-	print STDERR "$name Playing back recorded file.\n";
+	warn "$name Playing back recorded file.\n";
 	print "STREAM FILE $tmpname \"\"\n";
 	@result = checkresponse();
-	print STDERR "$name Failed to play file\n" if ($result[0] == -1);
+	warn "$name Failed to play file\n" if ($result[0] == -1);
 }
 
 if ($use_speex) {
@@ -239,10 +239,10 @@ close($fh);
 
 if ($use_ssl) {
 	$url = "https://" . $host;
-	$ua = LWP::UserAgent->new(ssl_opts => {verify_hostname => 1});
+	$ua  = LWP::UserAgent->new(ssl_opts => {verify_hostname => 1});
 } else {
 	$url = "http://" . $host;
-	$ua = LWP::UserAgent->new;
+	$ua  = LWP::UserAgent->new;
 }
 
 $ua->agent("Mozilla/5.0 (X11; Linux) AppleWebKit/535.2 (KHTML, like Gecko)");
@@ -257,7 +257,7 @@ die "$name Unable to get speech data.\n" if (!$uaresponse->is_success);
 if ($uaresponse->content =~ /^\{"status":(\d*),"id":"(.*)","hypotheses":\[(.*)\]\}$/) {
 	$response{status} = "$1";
 	$response{id}     = "$2";
-	print STDERR "$name Error reading audio file\n" if ($response{status} != 0);
+	warn "$name Error reading audio file\n" if ($response{status} != 0);
 #	# Save voice samples for debugging purposes #
 # 	if ($use_speex && $debug) {
 # 		if ($response{status} == 0) {
@@ -280,10 +280,10 @@ if ($uaresponse->content =~ /^\{"status":(\d*),"id":"(.*)","hypotheses":\[(.*)\]
 	}
 }
 
-print STDERR "$name The response was:\n", $uaresponse->content if ($debug);
+warn "$name The response was:\n", $uaresponse->content if ($debug);
 
 foreach (keys %response) {
-	print STDERR "$name Setting variable: $_ = $response{$_}\n" if ($debug);
+	warn "$name Setting variable: $_ = $response{$_}\n" if ($debug);
 	print "SET VARIABLE \"$_\" \"$response{$_}\"\n";
 	checkresponse();
 }
@@ -297,14 +297,14 @@ sub checkresponse {
 	if ($input =~ /^200/) {
 		$input =~ /result=(-?\d+)\s?(.*)$/;
 		if (!length($1)) {
-			print STDERR "$name Command failed: $input\n";
+			warn "$name Command failed: $input\n";
 			@values = ("-1");
 		} else {
-			print STDERR "$name Command returned: $input\n" if ($debug);
+			warn "$name Command returned: $input\n" if ($debug);
 			@values = ("$1", "$2");
 		}
 	} else {
-		print STDERR "$name Unexpected result: $input\n";
+		warn "$name Unexpected result: $input\n";
 		@values = ("-1");
 	}
 	return @values;
@@ -316,7 +316,7 @@ sub int_handler {
 
 END {
 	if ($tmpname) {
-		print STDERR "$name Cleaning temp files.\n" if ($debug);
+		warn "$name Cleaning temp files.\n" if ($debug);
 		unlink glob "$tmpname.*";
 	}
 }

@@ -49,18 +49,18 @@ $ua->timeout(20);
 
 # send each sound file to google and get the recognition results #
 foreach my $file (@ARGV) {
-	my($filename, $dir, $ext) = fileparse($file, qr/\.[^.]*/);
+	my ($filename, $dir, $ext) = fileparse($file, qr/\.[^.]*/);
 	if ($ext ne ".flac" && $ext ne ".spx" && $ext ne ".wav") {
 		say_msg("Unsupported filetype: $ext\n");
 		++$error;
 		next;
 	}
 	if ($ext eq ".flac") {
-		$filetype   = "x-flac";
+		$filetype = "x-flac";
 	} elsif ($ext eq ".spx") {
-		$filetype   = "x-speex-with-header-byte";
+		$filetype = "x-speex-with-header-byte";
 	} elsif ($ext eq ".wav") {
-		$filetype   = "x-flac";
+		$filetype = "x-flac";
 		if (($file = encode_flac($file)) eq '-1') {
 			++$error;
 			next;
@@ -146,10 +146,10 @@ sub parse_options {
 	if (defined $options{s}) {
 	# Set up connection type #
 		$url = "https://" . $host;
-		$ua = LWP::UserAgent->new(ssl_opts => {verify_hostname => 1});
+		$ua  = LWP::UserAgent->new(ssl_opts => {verify_hostname => 1});
 	} else {
 		$url = "http://" . $host;
-		$ua = LWP::UserAgent->new;
+		$ua  = LWP::UserAgent->new;
 	}
 	# set profanity filter #
 	$pro_filter = 2 if (defined $options{f});
@@ -169,8 +169,9 @@ sub encode_flac {
 	}
 	chomp($flac);
 
-	my ($fh, $tmpname) = tempfile("recg_XXXXXX",
-		DIR => $tmpdir,
+	my ($fh, $tmpname) = tempfile(
+		"recg_XXXXXX",
+		DIR    => $tmpdir,
 		SUFFIX => '.flac',
 		UNLINK => 1,
 	);
@@ -183,24 +184,26 @@ sub encode_flac {
 
 sub say_msg {
 # Print messages to user if 'quiet' flag is not set #
-	print @_, "\n" if (!defined $options{q});
+	my $message = shift;
+	print "$message\n" if (!defined $options{q});
+	return;
 }
 
 sub VERSION_MESSAGE {
 # Help message #
 	print "Speech recognition using google voice API.\n\n",
-		 "Usage: $0 [options] [file(s)]\n\n",
-		 "Supported options:\n",
-		 " -l <lang>      specify the language to use (default 'en-US')\n",
-		 " -o <type>      specify the type of output fomratting\n",
-		 "    detailed    print detailed info like confidence and return status (default)\n",
-		 "    compact     print only the recognized utterance\n",
-		 "    raw         raw JSON output\n",
-		 " -r <rate>      specify the audio sample rate in Hz (deafult 8000)\n",
-		 " -n <number>    specify the maximum number of results (default 1)\n",
-		 " -f             filter out profanities\n",
-		 " -s             use SSL to encrypt web trafic\n",
-		 " -q             don't print any error messages or warnings\n",
-		 " -h             this help message\n\n";
+		"Usage: $0 [options] [file(s)]\n\n",
+		"Supported options:\n",
+		" -l <lang>      specify the language to use (default 'en-US')\n",
+		" -o <type>      specify the type of output fomratting\n",
+		"    detailed    print detailed info like confidence and return status (default)\n",
+		"    compact     print only the recognized utterance\n",
+		"    raw         raw JSON output\n",
+		" -r <rate>      specify the audio sample rate in Hz (deafult 8000)\n",
+		" -n <number>    specify the maximum number of results (default 1)\n",
+		" -f             filter out profanities\n",
+		" -s             use SSL to encrypt web trafic\n",
+		" -q             don't print any error messages or warnings\n",
+		" -h             this help message\n\n";
 	exit(1);
 }

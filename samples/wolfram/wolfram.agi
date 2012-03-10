@@ -71,7 +71,7 @@ if (!length($AGI{arg_1})) {
 	return_var("No text passed to Wolfram.");
 	die "$name No text passed, Aborting.\n";
 }
-print STDERR "$name Questions is: $AGI{arg_1}\n" if($debug);
+warn "$name Questions is: $AGI{arg_1}\n" if($debug);
 $question = escape($AGI{arg_1});
 
 if ($use_ssl) {
@@ -96,7 +96,7 @@ if (!$ua_response->is_success) {
 
 $w_reply = XMLin($ua_response->content);
 if ($w_reply->{success} eq 'false') {
-	print STDERR "$name Wolfram returned no answer.\n" if ($debug);
+	warn "$name Wolfram returned no answer.\n" if ($debug);
 	return_var("I don't know how to answer that.");
 	exit;
 }
@@ -142,10 +142,10 @@ if (!$results) {
 
 # In case we were not able to locate any answers. #
 if (!$results) {
-	print STDERR "$name Failed to get any answer.\n" if ($debug);
+	warn "$name Failed to get any answer.\n" if ($debug);
 	return_var("Failed to get any answer.");
 } else {
-	print STDERR "$name Answer is:$answer\n" if ($debug);
+	warn "$name Answer is:$answer\n" if ($debug);
 	return_var($answer);
 }
 exit;
@@ -167,7 +167,7 @@ sub add_answer {
 # Store answers in channel variable. #
 sub return_var {
 	my $text = shift;
-	print STDERR "$name Setting $var_name to $text\n" if ($debug);
+	warn "$name Setting $var_name to $text\n" if ($debug);
 	print "SET VARIABLE \"$var_name\" \"$text\"\n";
 	checkresponse();
 }
@@ -180,14 +180,14 @@ sub checkresponse {
 	if ($input =~ /^200/) {
 		$input =~ /result=(-?\d+)\s?(.*)$/;
 		if (!length($1)) {
-			print STDERR "$name Command failed: $input\n";
+			warn "$name Command failed: $input\n";
 			@values = ("-1");
 		} else {
-			print STDERR "$name Command returned: $input\n" if ($debug);
+			warn "$name Command returned: $input\n" if ($debug);
 			@values = ("$1", "$2");
 		}
 	} else {
-		print STDERR "$name Unexpected result: $input\n";
+		warn "$name Unexpected result: $input\n";
 		@values = ("-1");
 	}
 	return @values;
