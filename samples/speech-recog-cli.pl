@@ -66,7 +66,7 @@ foreach my $file (@ARGV) {
 			next;
 		}
 	}
-	say_msg("Openning $file");
+	print("Openning $file\n") if (!defined $options{q});
 	if (open(my $fh, "<", "$file")) {
 		$audio = do { local $/; <$fh> };
 		close($fh);
@@ -185,7 +185,7 @@ sub encode_flac {
 sub say_msg {
 # Print messages to user if 'quiet' flag is not set #
 	my $message = shift;
-	print "$message\n" if (!defined $options{q});
+	warn "$0: $message" if (!defined $options{q});
 	return;
 }
 
