@@ -1,12 +1,16 @@
-<!DOCTYPE html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <meta name="generator" content="HTML Tidy for Linux/x86 (vers 25 March 2009), see www.w3.org" />
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
   <title>Speech recognition for Asterisk PBX</title>
-  <meta name="description" content="Asterisk AGI script for voice recognition using Google voice.">
-
+  <meta name="description" content=
+  "Asterisk AGI script for voice recognition using Google voice." />
   <style type="text/css">
+/*<![CDATA[*/
     body {
       margin-top: 1.0em;
       background-color: #f6772f;
@@ -28,185 +32,206 @@
     pre { background: #000; color: #fff; padding: 15px;}
     hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
     .footer { text-align:center; padding-top:30px; font-style: italic; }
+  /*]]>*/
   </style>
-<script type="text/javascript">
-	var _gaq = _gaq || [];
-	_gaq.push(['_setAccount', 'UA-10482811-5']);
-	_gaq.push(['_trackPageview']);
-	(function() {
-		var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-		ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-	})();
-</script>
+  <script type="text/javascript">
+//<![CDATA[
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-10482811-5']);
+        _gaq.push(['_trackPageview']);
+        (function() {
+                var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+                ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+                var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+  //]]>
+  </script>
+  <style type="text/css">
+/*<![CDATA[*/
+  img.c1 {position: absolute; top: 0; right: 0; border: 0;}
+  /*]]>*/
+  </style>
 </head>
 
 <body>
-  <a href="https://github.com/zaf/asterisk-speech-recog"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
+  <a href="https://github.com/zaf/asterisk-speech-recog"><img class="c1" src=
+  "http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt=
+  "Fork me on GitHub" /></a>
 
   <div id="container">
-
     <div class="download">
-      <a href="https://github.com/zaf/asterisk-speech-recog/zipball/master">
-        <img border="0" width="90" src="https://github.com/images/modules/download/zip.png"></a>
-      <a href="https://github.com/zaf/asterisk-speech-recog/tarball/master">
-        <img border="0" width="90" src="https://github.com/images/modules/download/tar.png"></a>
+      <a href="https://github.com/zaf/asterisk-speech-recog/zipball/master"><img border="0" width=
+      "90" src="https://github.com/images/modules/download/zip.png" /></a> <a href=
+      "https://github.com/zaf/asterisk-speech-recog/tarball/master"><img border="0" width="90" src=
+      "https://github.com/images/modules/download/tar.png" /></a>
     </div>
 
-    <h1><a href="https://github.com/zaf/asterisk-speech-recog">Speech recognition for Asterisk</a></h1>
+    <h1><a href="https://github.com/zaf/asterisk-speech-recog">Speech recognition for
+    Asterisk</a></h1>
 
     <div class="description">
       Speech recognition script for Asterisk that uses Google speech API.
     </div>
 
-      <p>This AGI script makes use of Google's speech recognition engine
-		in order to render speech to text and return it back to the dialplan
-		as an asterisk channel variable. See <a href="https://raw.github.com/zaf/asterisk-speech-recog/master/README">
-		README</a> for a complete list of supported languages.</p>
+    <p>This AGI script makes use of Google's speech recognition engine in order to render speech to
+    text and return it back to the dialplan as an asterisk channel variable. See <a href=
+    "https://raw.github.com/zaf/asterisk-speech-recog/master/README">README</a> for a complete list
+    of supported languages.</p>
 
-      <h2>Dependencies</h2>
-      <p>Perl: The Perl Programming Language<br/>
-	  perl-libwww: The World-Wide Web library for Perl<br/>
-	  flac: Free Lossless Audio Codec<br/>
-	  Internet access in order to contact google and get the speech data.<br/>
-	  If you plan to use SSL you will need to install the 'IO-Socket-SSL' Perl module
-	  that implements an interface to SSL sockets.
-	  </p>
+    <h2>Dependencies</h2>
 
-      <h2>Install</h2>
-      <p>To install copy speech-recog.agi to your agi-bin directory.<br/>
-	  Usually this is /var/lib/asterisk/agi-bin/<br/>
-	  To make sure check your /etc/asterisk/asterisk.conf file</p>
+    <p>Perl: The Perl Programming Language<br />
+    perl-libwww: The World-Wide Web library for Perl<br />
+    flac: Free Lossless Audio Codec<br />
+    Internet access in order to contact google and get the speech data.<br />
+    If you plan to use SSL you will need to install the 'IO-Socket-SSL' Perl module that implements
+    an interface to SSL sockets.</p>
 
-	  <h2>Usage</h2>
-		<p><b>agi(speech-recog.agi,[lang],[timeout],[intkey],[NOBEEP])</b>:  Records from the current channel
-		untill 3 seconds of silence are detected (setting the 'timeout'
-		argument to -1 disables the silence detenction) or the interrupt key (# by default) is pressed.
-		If NOBEEP is set, no beep sound is played back to the user to indicate the start of the recording.
-		The recorded sound is send over to googles speech recognition service and the
-		returned text string is assigned as the value of the channel variable 'utterance'.<br/>
-		The scripts sets the following channel variables:<br/>
-		<b>status:</b> Return status. 0 means success, non zero values indicating different errors.<br/>
-		<b>utterance:</b> The generated text string.<br/>
-		<b>confidence:</b> A value between 0 and 1 indicating the probability of a correct
-		recognition.Values bigger than 0.90 usually mean that the resulted text is correct.<br/>
-		<b>id:</b> Some id string that googles engine returns, not very useful(?).
-	  </p>
+    <h2>Install</h2>
 
-	<p>Asterisk dialplan examples:<br/>
-	In these examples <a href="http://zaf.github.com/asterisk-googletts/">googletts.agi</a> script
-	is used for speech synthesys:<br/>
-	<pre>
+    <p>To install copy speech-recog.agi to your agi-bin directory.<br />
+    Usually this is /var/lib/asterisk/agi-bin/<br />
+    To make sure check your /etc/asterisk/asterisk.conf file</p>
+
+    <h2>Usage</h2>
+
+    <p><b>agi(speech-recog.agi,[lang],[timeout],[intkey],[NOBEEP])</b>: Records from the current
+    channel untill 3 seconds of silence are detected (setting the 'timeout' argument to -1 disables
+    the silence detenction) or the interrupt key (# by default) is pressed. If NOBEEP is set, no
+    beep sound is played back to the user to indicate the start of the recording. The recorded
+    sound is send over to googles speech recognition service and the returned text string is
+    assigned as the value of the channel variable 'utterance'.<br />
+    The scripts sets the following channel variables:<br />
+    <b>status:</b> Return status. 0 means success, non zero values indicating different
+    errors.<br />
+    <b>utterance:</b> The generated text string.<br />
+    <b>confidence:</b> A value between 0 and 1 indicating the probability of a correct
+    recognition.Values bigger than 0.90 usually mean that the resulted text is correct.<br />
+    <b>id:</b> Some id string that googles engine returns, not very useful(?).</p>
+
+    <p>Asterisk dialplan examples:<br />
+    In these examples <a href="http://zaf.github.com/asterisk-googletts/">googletts.agi</a> script
+    is used for speech synthesys:<br /></p>
+    <pre>
 ;;Simple speech recognition
-exten => 1234,1,Answer()
-exten => 1234,n,agi(speech-recog.agi,en-US)
-exten => 1234,n,Verbose(1,The text you just said is: ${utterance})
-exten => 1234,n,Verbose(1,The probability to be right is: ${confidence})
-exten => 1234,n,Hangup()
-	</pre>
-
-	<pre>
+exten =&gt; 1234,1,Answer()
+exten =&gt; 1234,n,agi(speech-recog.agi,en-US)
+exten =&gt; 1234,n,Verbose(1,The text you just said is: ${utterance})
+exten =&gt; 1234,n,Verbose(1,The probability to be right is: ${confidence})
+exten =&gt; 1234,n,Hangup()
+        
+</pre>
+    <pre>
 ;;Speech recognition demo:
-exten => 1235,1,Answer()
-exten => 1235,n,agi(googletts.agi,"Say something in English, when done press the pound key.",en)
-exten => 1235,n(record),agi(speech-recog.agi,en-US)
-exten => 1235,n,Verbose(1,Script returned: ${status} , ${id} , ${confidence} , ${utterance})
+exten =&gt; 1235,1,Answer()
+exten =&gt; 1235,n,agi(googletts.agi,"Say something in English, when done press the pound key.",en)
+exten =&gt; 1235,n(record),agi(speech-recog.agi,en-US)
+exten =&gt; 1235,n,Verbose(1,Script returned: ${status} , ${id} , ${confidence} , ${utterance})
 
 ;Check return status:
-exten => 1235,n,GotoIf($["${status}" = "0"]?success:fail)
+exten =&gt; 1235,n,GotoIf($["${status}" = "0"]?success:fail)
 
 ;Check the probability of a successful recognition:
-exten => 1235,n(success),GotoIf($["${confidence}" > "0.8"]?playback:retry)
+exten =&gt; 1235,n(success),GotoIf($["${confidence}" &gt; "0.8"]?playback:retry)
 
 ;Playback the text:
-exten => 1235,n(playback),agi(googletts.agi,"The text you just said was...",en)
-exten => 1235,n,agi(googletts.agi,"${utterance}",en)
-exten => 1235,n,goto(end)
+exten =&gt; 1235,n(playback),agi(googletts.agi,"The text you just said was...",en)
+exten =&gt; 1235,n,agi(googletts.agi,"${utterance}",en)
+exten =&gt; 1235,n,goto(end)
 
 ;Retry in case speech recognition wasn't successful:
-exten => 1235,n(retry),agi(googletts.agi,"Can you please repeat more clearly?",en)
-exten => 1235,n,goto(record)
+exten =&gt; 1235,n(retry),agi(googletts.agi,"Can you please repeat more clearly?",en)
+exten =&gt; 1235,n,goto(record)
 
-exten => 1235,n(fail),agi(googletts.agi,"Failed to get speech data.",en)
-exten => 1235,n(end),Hangup()
-	</pre>
-
-	<pre>
+exten =&gt; 1235,n(fail),agi(googletts.agi,"Failed to get speech data.",en)
+exten =&gt; 1235,n(end),Hangup()
+        
+</pre>
+    <pre>
 ;;Voice dialing example
-exten => 1236,1,Answer()
-exten => 1236,n,agi(googletts.agi,"Please say the number you want to dial.",en)
-exten => 1236,n(record),agi(speech-recog.agi,en-US)
-exten => 1236,n,GotoIf($[$["${status}" = "0"] & $["${confidence}" > "0.8"]]?success:retry)
+exten =&gt; 1236,1,Answer()
+exten =&gt; 1236,n,agi(googletts.agi,"Please say the number you want to dial.",en)
+exten =&gt; 1236,n(record),agi(speech-recog.agi,en-US)
+exten =&gt; 1236,n,GotoIf($[$["${status}" = "0"] &amp; $["${confidence}" &gt; "0.8"]]?success:retry)
 
-exten => 1236,n(success),goto(${utterance},1)
+exten =&gt; 1236,n(success),goto(${utterance},1)
 
-exten => 1236,n(retry),agi(googletts.agi,"Can you please repeat?",en)
-exten => 1236,n,goto(record)
-	</pre><br/>
-	<p>Under the folder wolfram you can find a sample agi script that in combination with
-	speech-recog.agi sends queries to WolframAlpha and returns the answers as a dialplan
-	variable that can be read back to the user.<br/>
-	See <a href="https://raw.github.com/zaf/asterisk-speech-recog/master/samples/wolfram/README"> wolfram/README</a>
-	for details.</p>
-	<p>A diaplan example follows where you can dictate your question to WolframAplha and
-	listen to the answer on your phone.
-	<br/>
-	<pre>
+exten =&gt; 1236,n(retry),agi(googletts.agi,"Can you please repeat?",en)
+exten =&gt; 1236,n,goto(record)
+        
+</pre><br />
+
+    <p>Under the folder wolfram you can find a sample agi script that in combination with
+    speech-recog.agi sends queries to WolframAlpha and returns the answers as a dialplan variable
+    that can be read back to the user.<br />
+    See <a href=
+    "https://raw.github.com/zaf/asterisk-speech-recog/master/samples/wolfram/README">wolfram/README</a>
+    for details.</p>
+
+    <p>A diaplan example follows where you can dictate your question to WolframAplha and listen to
+    the answer on your phone.<br /></p>
+    <pre>
 ;WolframAlpha query demo:
-exten => 1237,1,Answer()
-exten => 1237,n,agi(googletts.agi,"What is your question?",en)
+exten =&gt; 1237,1,Answer()
+exten =&gt; 1237,n,agi(googletts.agi,"What is your question?",en)
 
 ;;Record the question and render it to text:
-exten => 1237,n(record),agi(speech-recog.agi,en-US)
-exten => 1237,n,GotoIf($[$["${status}" = "0"] & $["${confidence}" > "0.8"]]?success:retry)
+exten =&gt; 1237,n(record),agi(speech-recog.agi,en-US)
+exten =&gt; 1237,n,GotoIf($[$["${status}" = "0"] &amp; $["${confidence}" &gt; "0.8"]]?success:retry)
 
 ;;Submit the question to wolfram:
-exten => 1237,n(success),agi(wolfram.agi,"${utterance}")
+exten =&gt; 1237,n(success),agi(wolfram.agi,"${utterance}")
 
 ;;Playback the answer:
-exten => 1237,n,agi(googletts.agi,"${wolfram_answer}",en)
-exten => 1237,n,goto(end)
+exten =&gt; 1237,n,agi(googletts.agi,"${wolfram_answer}",en)
+exten =&gt; 1237,n,goto(end)
 
 ;;Retry in case speech recognition wasn't successful:
-exten => 1237,n(retry),agi(googletts.agi,"Can you please repeat more clearly?",en)
-exten => 1237,n,goto(record)
+exten =&gt; 1237,n(retry),agi(googletts.agi,"Can you please repeat more clearly?",en)
+exten =&gt; 1237,n,goto(record)
 
-exten => 1237,n(end),Hangup()
-	</pre>
-	</p>
+exten =&gt; 1237,n(end),Hangup()
+        
+</pre>
 
-      <h2>License</h2>
-      <p>The speech-recog script for asterisk is distributed under the GNU General Public License v2.
-	</p>
+    <h2>License</h2>
 
-	<h2>Authors</h2>
-	<p><a href="http://github.com/zaf">Lefteris Zafiris</a> (zaf.000@gmail.com)
-	<br/></p>
+    <p>The speech-recog script for asterisk is distributed under the GNU General Public License
+    v2.</p>
+
+    <h2>Authors</h2>
+
+    <p><a href="http://github.com/zaf">Lefteris Zafiris</a> (zaf.000@gmail.com)<br /></p>
 
     <h2>Download</h2>
-    <p>
-	  You can get the latest stable version <a href="https://github.com/downloads/zaf/asterisk-speech-recog/asterisk-speech-recog-0.5.tar.gz">here</a>.<br />
-      Develompent snapshots are available in either
-      <a href="https://github.com/zaf/asterisk-speech-recog/zipball/master">zip</a> or
-      <a href="https://github.com/zaf/asterisk-speech-recog/tarball/master">tar formats.
-    </p>
-    <p>You can also clone the project with <a href="http://git-scm.com">Git</a>
-      by running:
-      <pre>$ git clone git://github.com/zaf/asterisk-speech-recog</pre>
-    </p>
 
-	<h2>Links</h2>
-	<p>
-		<a href="http://zaf.github.com/asterisk-googletts/">GoogleTTS text to speech script for asterisk</a><br/>
-		<a href="http://zaf.github.com/Asterisk-Flite/">Asterisk Flite text to speech module</a><br/>
-		<a href="http://zaf.github.com/Asterisk-eSpeak/">Asterisk e-Speak text to speech module</a>
-	</p>
+    <p>You can get the latest stable version <a href=
+    "https://github.com/downloads/zaf/asterisk-speech-recog/asterisk-speech-recog-0.5.tar.gz">here</a>.<br />
+
+    Develompent snapshots are available in either <a href=
+    "https://github.com/zaf/asterisk-speech-recog/zipball/master">zip</a> or <a href=
+    "https://github.com/zaf/asterisk-speech-recog/tarball/master">tar formats.</a></p><a href=
+    "https://github.com/zaf/asterisk-speech-recog/tarball/master"></a>
+
+    <p>You can also clone the project with <a href="http://git-scm.com">Git</a> by running:</p>
+    <pre>
+$ git clone git://github.com/zaf/asterisk-speech-recog
+</pre>
+
+    <h2>Links</h2>
+
+    <p><a href="http://zaf.github.com/asterisk-googletts/">GoogleTTS text to speech script for
+    asterisk</a><br /></p>
+
+    <p><a href="http://zaf.github.com/asterisk-mstts/">Speech synthesis using Microsoft Translator
+    API for Asterisk</a><br />
+    <a href="http://zaf.github.com/Asterisk-Flite/">Asterisk Flite text to speech module</a><br />
+    <a href="http://zaf.github.com/Asterisk-eSpeak/">Asterisk e-Speak text to speech module</a></p>
 
     <div class="footer">
-      get the source code on GitHub : <a href="https://github.com/zaf/asterisk-speech-recog">zaf/asterisk-speech-recog</a>
+      get the source code on GitHub : <a href=
+      "https://github.com/zaf/asterisk-speech-recog">zaf/asterisk-speech-recog</a>
     </div>
-
   </div>
-
 </body>
 </html>
