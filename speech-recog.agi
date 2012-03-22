@@ -54,6 +54,7 @@
 
 use warnings;
 use strict;
+use CGI::Util qw(escape);
 use File::Copy qw(move);
 use File::Temp qw(tempfile);
 use LWP::UserAgent;
@@ -102,15 +103,17 @@ my $endian;
 my $url;
 my $silence;
 my $filetype;
+my $results    = 1;
+my $grammar    = "builtin:dictation"; #"builtin:search";
 my $beep       = "BEEP";
 my $comp_level = -8;
 my $ua_timeout = 10;
 my $tmpdir     = "/tmp";
 my $host       = "www.google.com/speech-api/v1/recognize";
 my $flac       = `/usr/bin/which flac`;
-#my $speex     = `/usr/bin/which speexenc`;
+my $speex      = `/usr/bin/which speexenc`;
 # ugly hardcoded path is ugly, make sure to change this #
-my $speex      = "/home/zaf/bin/speexenc";
+#my $speex      = "/home/zaf/bin/speexenc";
 
 # Store AGI input #
 while (<STDIN>) {
@@ -245,10 +248,15 @@ if ($use_ssl) {
 	$ua  = LWP::UserAgent->new;
 }
 
+$language = escape($language);
+$grammar  = escape($grammar);
+$url .= "?xjerr=1&client=chromium&lang=$language&pfilter=$pro_filter&lm=$grammar&maxresults=$results";
+
 $ua->agent("Mozilla/5.0 (X11; Linux) AppleWebKit/535.2 (KHTML, like Gecko)");
 $ua->timeout($ua_timeout);
+
 $uaresponse = $ua->post(
-	"$url?xjerr=1&client=chromium&lang=$language&pfilter=$pro_filter",
+	"$url",
 	Content_Type => "audio/$filetype; rate=$samplerate",
 	Content      => "$audio",
 );
