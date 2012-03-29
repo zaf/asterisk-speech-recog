@@ -40,6 +40,7 @@ die "You must have an App ID from WolframAlpha to use this script.\n" if (!$app_
 
 my $ua = LWP::UserAgent->new;
 $ua->agent("Mozilla/5.0 (X11; Linux) AppleWebKit/535.2 (KHTML, like Gecko)");
+$ua->env_proxy;
 $ua->timeout(15);
 my $ua_request = HTTP::Request->new(
 	'GET' => "$url?input=$question&appid=$app_id".

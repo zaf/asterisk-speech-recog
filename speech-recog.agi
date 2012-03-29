@@ -198,6 +198,21 @@ foreach (keys %response) {
 	checkresponse();
 }
 
+# Initialise User angent #
+if ($use_ssl) {
+	$url = "https://" . $host;
+	$ua  = LWP::UserAgent->new(ssl_opts => {verify_hostname => 1});
+} else {
+	$url = "http://" . $host;
+	$ua  = LWP::UserAgent->new;
+}
+$language = escape($language);
+$grammar  = escape($grammar);
+$url .= "?xjerr=1&client=chromium&lang=$language&pfilter=$pro_filter&lm=$grammar&maxresults=$results";
+$ua->agent("Mozilla/5.0 (X11; Linux) AppleWebKit/535.2 (KHTML, like Gecko)");
+$ua->env_proxy;
+$ua->timeout($ua_timeout);
+
 # Hnadle interrupts #
 $SIG{'INT'} = \&int_handler;
 $SIG{'HUP'} = \&int_handler;
@@ -213,19 +228,19 @@ if ($debug) {
 		"Encoding format: ", ($use_speex) ? "speex" : "flac", "\n",
 		"$name Languge: $language, SSL: ", ($use_ssl) ? "yes, " : "no, ",
 		"$silence, Interrupt keys: $intkey\n";
-	warn "$name Playing back recorded file.\n";
-	print "STREAM FILE $tmpname \"\"\n";
-	@result = checkresponse();
-	warn "$name Failed to play file\n" if ($result[0] == -1);
+#	warn "$name Playing back recorded file.\n";
+#	print "STREAM FILE $tmpname \"\"\n";
+#	@result = checkresponse();
+#	warn "$name Failed to play file\n" if ($result[0] == -1);
 }
 
+# Encode sound data #
 if ($use_speex) {
 	$filetype = "x-speex-with-header-byte";
 	$endian = (unpack("h*", pack("s", 1)) =~ /01/) ? "--be" : "--le";
 	# Encode file to speex. #
-	system($speex, "--quality", "3", "--vbr", "--denoise", "--rate", $samplerate,
-		"--headerbyte", "--quiet", $endian, "$tmpname.$format", "$tmpname.spx") == 0
-		or die "$name $speex failed: $?\n";
+	system($speex, "--vbr", "--rate", $samplerate, "--headerbyte", "--quiet", $endian,
+		"$tmpname.$format", "$tmpname.spx") == 0 or die "$name $speex failed: $?\n";
 	open($fh, "<", "$tmpname.spx") or die "Can't read file: $!";
 } else {
 	$filetype = "x-flac";
@@ -240,21 +255,7 @@ if ($use_speex) {
 $audio = do { local $/; <$fh> };
 close($fh);
 
-if ($use_ssl) {
-	$url = "https://" . $host;
-	$ua  = LWP::UserAgent->new(ssl_opts => {verify_hostname => 1});
-} else {
-	$url = "http://" . $host;
-	$ua  = LWP::UserAgent->new;
-}
-
-$language = escape($language);
-$grammar  = escape($grammar);
-$url .= "?xjerr=1&client=chromium&lang=$language&pfilter=$pro_filter&lm=$grammar&maxresults=$results";
-
-$ua->agent("Mozilla/5.0 (X11; Linux) AppleWebKit/535.2 (KHTML, like Gecko)");
-$ua->timeout($ua_timeout);
-
+# Send adio data for analysis #
 $uaresponse = $ua->post(
 	"$url",
 	Content_Type => "audio/$filetype; rate=$samplerate",
@@ -280,6 +281,7 @@ if ($uaresponse->content =~ /^\{"status":(\d*),"id":"(.*)","hypotheses":\[(.*)\]
 # 			move("$tmpname.flac", "$tmpname-fail.flac");
 # 		}
 # 	}
+
 	if ($3 =~ /^\{"utterance":"(.*)","confidence":(.*)\}/) {
 		$response{utterance}  = "$1";
 		$response{confidence} = "$2";

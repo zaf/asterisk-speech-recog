@@ -45,6 +45,7 @@ VERSION_MESSAGE() if (defined $options{h} || !@ARGV);
 parse_options();
 
 $ua->agent("Mozilla/5.0 (X11; Linux) AppleWebKit/535.2 (KHTML, like Gecko)");
+$ua->env_proxy;
 $ua->timeout(20);
 
 # send each sound file to google and get the recognition results #
