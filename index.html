@@ -119,7 +119,7 @@ exten =&gt; 1234,n,agi(speech-recog.agi,en-US)
 exten =&gt; 1234,n,Verbose(1,The text you just said is: ${utterance})
 exten =&gt; 1234,n,Verbose(1,The probability to be right is: ${confidence})
 exten =&gt; 1234,n,Hangup()
-        
+
 </pre>
     <pre>
 ;;Speech recognition demo:
@@ -145,7 +145,7 @@ exten =&gt; 1235,n,goto(record)
 
 exten =&gt; 1235,n(fail),agi(googletts.agi,"Failed to get speech data.",en)
 exten =&gt; 1235,n(end),Hangup()
-        
+
 </pre>
     <pre>
 ;;Voice dialing example
@@ -158,7 +158,7 @@ exten =&gt; 1236,n(success),goto(${utterance},1)
 
 exten =&gt; 1236,n(retry),agi(googletts.agi,"Can you please repeat?",en)
 exten =&gt; 1236,n,goto(record)
-        
+
 </pre><br />
 
     <p>Under the folder wolfram you can find a sample agi script that in combination with
@@ -191,7 +191,7 @@ exten =&gt; 1237,n(retry),agi(googletts.agi,"Can you please repeat more clearly?
 exten =&gt; 1237,n,goto(record)
 
 exten =&gt; 1237,n(end),Hangup()
-        
+
 </pre>
 
     <h2>License</h2>
@@ -222,6 +222,8 @@ $ git clone git://github.com/zaf/asterisk-speech-recog
 
     <p><a href="http://zaf.github.com/asterisk-googletts/">GoogleTTS text to speech script for
     asterisk</a><br />
+	<a href="http://zaf.github.com/asterisk-googletranslate/">Text translation using Google Trnanslate
+    API for Asterisk</a><br />
     <a href="http://zaf.github.com/asterisk-mstts/">Speech synthesis using Microsoft Translator
     API for Asterisk</a><br />
     <a href="http://zaf.github.com/Asterisk-Flite/">Asterisk Flite text to speech module</a><br />
