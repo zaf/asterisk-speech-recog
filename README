@@ -11,11 +11,15 @@ Requirements
 ------------
 Perl          The Perl Programming Language
 perl-libwww   The World-Wide Web library for Perl
+IO-Socket-SSL Perl module that implements an interface to SSL sockets.
 flac          Free Lossless Audio Codec
 Internet access in order to contact google and get the speech data.
 
-If you plan to use SSL you will need to install the 'IO-Socket-SSL' Perl module
-that implements an interface to SSL sockets.
+** Optional/Highly experimental **
+speex         patent-free audio compression format designed for speech.
+              works only with patched speex encoder that supports
+              MIME "x-speex-with-header-byte"
+              https://github.com/zaf/Speex-with-header-bytes
 
 ------------
 Installation
@@ -122,14 +126,10 @@ Zulu
 -----------------------
 Security Considerations
 -----------------------
-This script contacts google's servers in order send the recorded voice data and get back
-the resulted text. If you are using voice recognition for sensitive data or you want to
-make sure that no 3rd party can eavesdrop your communication with the google service it is
-advised to enable the use of SSL in the script. This will encrypt all the traffic between
-your pbx and google servers making it much safer.
-To enable the use of SSL set the variable '$use_ssl' to 1 in the script. Keep in mind that
-security comes with a price, the initialisation of the SSL session adds a small delay in
-communication (usually under 1 sec).
+This script contacts googles' servers in order send the recorded voice data and get back
+the resulted text. The script uses SSL by default to encrypt all the traffic between
+your pbx and google servers so no 3rd party can eavesdrop your communication, but your
+voice data will be available to Google under a not yet defined policy.
 
 -------
 License

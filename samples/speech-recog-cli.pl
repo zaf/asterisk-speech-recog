@@ -24,6 +24,7 @@ use File::Temp qw(tempfile);
 use Getopt::Std;
 use File::Basename;
 use LWP::UserAgent;
+use LWP::ConnCache;
 
 my %options;
 my $filetype;
@@ -46,13 +47,14 @@ parse_options();
 
 $ua->agent("Mozilla/5.0 (X11; Linux) AppleWebKit/535.2 (KHTML, like Gecko)");
 $ua->env_proxy;
+$ua->conn_cache(LWP::ConnCache->new());
 $ua->timeout(20);
 
 # send each sound file to google and get the recognition results #
 foreach my $file (@ARGV) {
 	my ($filename, $dir, $ext) = fileparse($file, qr/\.[^.]*/);
 	if ($ext ne ".flac" && $ext ne ".spx" && $ext ne ".wav") {
-		say_msg("Unsupported filetype: $ext\n");
+		say_msg("Unsupported filetype: $ext");
 		++$error;
 		next;
 	}
@@ -72,7 +74,7 @@ foreach my $file (@ARGV) {
 		$audio = do { local $/; <$fh> };
 		close($fh);
 	} else {
-		say_msg("Cant read file $file.\n");
+		say_msg("Cant read file $file");
 		++$error;
 		next;
 	}
@@ -83,7 +85,7 @@ foreach my $file (@ARGV) {
 		Content      => "$audio",
 	);
 	if (!$response->is_success) {
-		say_msg("Failed to get data for file:$file.\n");
+		say_msg("Failed to get data for file:$file");
 		++$error;
 		next;
 	}
@@ -177,7 +179,7 @@ sub encode_flac {
 		UNLINK => 1,
 	);
 	if (system($flac, "-8", "-f", "--totally-silent", "-o", "$tmpname", "$file")) {
-		say_msg("$flac failed to encode file.");
+		say_msg("$flac failed to encode file");
 		return -1;
 	}
 	return $tmpname;
@@ -185,8 +187,8 @@ sub encode_flac {
 
 sub say_msg {
 # Print messages to user if 'quiet' flag is not set #
-	my $message = shift;
-	warn "$0: $message" if (!defined $options{q});
+	my @message = @_;
+	warn @message if (!defined $options{q});
 	return;
 }
 

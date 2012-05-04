@@ -82,7 +82,7 @@ my $pro_filter = 0;
 my $use_speex = 0;
 
 # Use SSL                       #
-my $use_ssl = 0;
+my $use_ssl = 1;
 
 # Verbose debugging messages    #
 my $debug = 0;
@@ -112,8 +112,6 @@ my $tmpdir     = "/tmp";
 my $host       = "www.google.com/speech-api/v1/recognize";
 my $flac       = `/usr/bin/which flac`;
 my $speex      = `/usr/bin/which speexenc`;
-# ugly hardcoded path is ugly, make sure to change this #
-#my $speex      = "/home/zaf/bin/speexenc";
 
 # Store AGI input #
 while (<STDIN>) {
@@ -124,11 +122,6 @@ while (<STDIN>) {
 ($AGI{arg_1}, $AGI{arg_2}, $AGI{arg_3}, $AGI{arg_4}) = @ARGV;
 
 $name = " -- $AGI{request}:";
-
-# if ($debug) {
-# 	warn "$name AGI Environment Dump:\n";
-# 	warn "$name $_ = $AGI{$_}\n" foreach (sort keys %AGI);
-# }
 
 # Abort if required programs not found. #
 if ($use_speex) {
@@ -228,10 +221,6 @@ if ($debug) {
 		"Encoding format: ", ($use_speex) ? "speex" : "flac", "\n",
 		"$name Languge: $language, SSL: ", ($use_ssl) ? "yes, " : "no, ",
 		"$silence, Interrupt keys: $intkey\n";
-#	warn "$name Playing back recorded file.\n";
-#	print "STREAM FILE $tmpname \"\"\n";
-#	@result = checkresponse();
-#	warn "$name Failed to play file\n" if ($result[0] == -1);
 }
 
 # Encode sound data #
@@ -267,20 +256,6 @@ if ($uaresponse->content =~ /^\{"status":(\d*),"id":"(.*)","hypotheses":\[(.*)\]
 	$response{status} = "$1";
 	$response{id}     = "$2";
 	warn "$name Error reading audio file\n" if ($response{status} != 0);
-#	# Save voice samples for debugging purposes #
-# 	if ($use_speex && $debug) {
-# 		if ($response{status} == 0) {
-# 			move("$tmpname.spx", "$tmpname-success.spx");
-# 		} else {
-# 			move("$tmpname.spx", "$tmpname-fail.spx");
-# 		}
-# 	} elsif (!$use_speex && $debug) {
-# 		if ($response{status} == 0) {
-# 			move("$tmpname.flac", "$tmpname-success.flac");
-# 		} else {
-# 			move("$tmpname.flac", "$tmpname-fail.flac");
-# 		}
-# 	}
 
 	if ($3 =~ /^\{"utterance":"(.*)","confidence":(.*)\}/) {
 		$response{utterance}  = "$1";
