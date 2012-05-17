@@ -38,7 +38,8 @@
 #	$intkey (can be any digit from 0 to 9 or # and *, or a combination of them)
 #
 # Sample rate:
-#	$samplerate (value in Hz, 8000 or 16000 if used with wideband codecs)
+#	$samplerate (value in Hz. 0 for atuomatic detection per channel/call, 16000 for
+#   use with wideband codecs, 8000 for traditional codecs.
 #
 # Profanity filter:
 #	$pro_filter (0:disable, 1: remove profanities, 2: mask profanities)
@@ -73,7 +74,7 @@ my $timeout = 2;
 my $intkey = "#";
 
 # Input audio sample rate       #
-my $samplerate = 8000;
+my $samplerate = 0;
 
 # Profanity filter              #
 my $pro_filter = 0;
@@ -123,6 +124,19 @@ while (<STDIN>) {
 
 $name = " -- $AGI{request}:";
 
+# Reset variables. #
+%response = (
+	utterance  => -1,
+	status     => -1,
+	id         => -1,
+	confidence => -1,
+);
+warn "$name Clearing channel variables.\n" if ($debug);
+foreach (keys %response) {
+	print "SET VARIABLE \"$_\" \"$response{$_}\"\n";
+	checkresponse();
+}
+
 # Abort if required programs not found. #
 if ($use_speex) {
 	die "$name speexenc is missing. Aborting.\n" if (!$speex);
@@ -132,14 +146,6 @@ if ($use_speex) {
 	die "$name flac is missing. Aborting.\n" if (!$flac);
 	chomp($flac);
 	warn "$name Found flac in: $flac\n" if ($debug);
-}
-
-# Setting recording file format according to sample rate. #
-if ($samplerate == 16000) {
-	$format    = "sln16";
-} else {
-	$format     = "sln";
-	$samplerate = 8000;
 }
 
 # Setting language, timeout, interrupt keys and BEEP indication #
@@ -178,17 +184,14 @@ if ($result[0] == 4) {
 	checkresponse();
 }
 
-# Reset variables. #
-%response = (
-	utterance  => -1,
-	status     => -1,
-	id         => -1,
-	confidence => -1,
-);
-warn "$name Clearing channel variables.\n" if ($debug);
-foreach (keys %response) {
-	print "SET VARIABLE \"$_\" \"$response{$_}\"\n";
-	checkresponse();
+# Setting recording file format according to sample rate. #
+if ($samplerate == 0) {
+	($format, $samplerate) = detect_format();
+} elsif ($samplerate == 16000) {
+	$format    = "sln16";
+} else {
+	$format     = "sln";
+	$samplerate = 8000;
 }
 
 # Initialise User angent #
@@ -293,6 +296,24 @@ sub checkresponse {
 		@values = ("-1");
 	}
 	return @values;
+}
+
+sub detect_format {
+	print "GET FULL VARIABLE \${CHANNEL(audionativeformat)}\n";
+	my @reply = checkresponse();
+	if ($reply[0] == 1 && $reply[1] =~ /silk12|sln12/) {
+		return ("sln12", 12000);
+	} elsif ($reply[0] == 1 && $reply[1] =~ /g722|speex16|slin16|silk16|siren7/) {
+		return ("sln16", 16000);
+	} elsif ($reply[0] == 1 && $reply[1] =~ /speex32|slin32|celt32|siren14/) {
+		return ("sln32", 32000);
+	} elsif ($reply[0] == 1 && $reply[1] =~ /celt44|slin44/) {
+		return ("sln44", 44100);
+	} elsif ($reply[0] == 1 && $reply[1] =~ /celt48|slin48/) {
+		return ("sln48", 48000);
+	} else {
+		return ("sln", 8000);
+	}
 }
 
 sub int_handler {
