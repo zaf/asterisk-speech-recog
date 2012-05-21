@@ -74,7 +74,8 @@ my $timeout = 2;
 my $intkey = "#";
 
 # Input audio sample rate       #
-my $samplerate = 0;
+# Leave blank to auto-detect    #
+my $samplerate = "";
 
 # Profanity filter              #
 my $pro_filter = 0;
@@ -185,7 +186,7 @@ if ($result[0] == 4) {
 }
 
 # Setting recording file format according to sample rate. #
-if    ($samplerate == 0)     { ($format, $samplerate) = detect_format(); }
+if    (!$samplerate)         { ($format, $samplerate) = detect_format(); }
 elsif ($samplerate == 12000) { $format = "sln12"; }
 elsif ($samplerate == 16000) { $format = "sln16"; }
 elsif ($samplerate == 32000) { $format = "sln32"; }
