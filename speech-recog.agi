@@ -299,21 +299,17 @@ sub checkresponse {
 }
 
 sub detect_format {
+# Detect the sound format used #
 	my @format;
 	print "GET FULL VARIABLE \${CHANNEL(audionativeformat)}\n";
 	my @reply = checkresponse();
-	if ($reply[1] =~ /silk12|sln12/) {
-		@format = ("sln12", 12000);
-	} elsif ($reply[1] =~ /g722|speex16|slin16|silk16|siren7/) {
-		@format = ("sln16", 16000);
-	} elsif ($reply[1] =~ /speex32|slin32|celt32|siren14/) {
-		@format = ("sln32", 32000);
-	} elsif ($reply[1] =~ /celt44|slin44/) {
-		@format = ("sln44", 44100);
-	} elsif ($reply[1] =~ /celt48|slin48/) {
-		@format = ("sln48", 48000);
-	} else {
-		@format = ("sln", 8000);
+	for ($reply[1]) {
+		if    (/(silk|sln)12/)                    { @format = ("sln12", 12000); }
+		elsif (/(speex|slin|silk)16|g722|siren7/) { @format = ("sln16", 16000); }
+		elsif (/(speex|slin|celt)32|siren14/)     { @format = ("sln32", 32000); }
+		elsif (/(celt|slin)44/)                   { @format = ("sln44", 44100); }
+		elsif (/(celt|slin)48/)                   { @format = ("sln48", 48000); }
+		else                                      { @format = ("sln",    8000); }
 	}
 	return @format;
 }
