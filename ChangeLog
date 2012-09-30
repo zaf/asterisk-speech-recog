@@ -1,3 +1,9 @@
+2012-30-09 Lefteris Zafiris <zaf.000@gmail.com> - 0.6
+	Added automatic audio format detection. Enabled SSL by default.
+	Proxy support. Added profanities filtering option.
+	Added 'maxresults' and 'grammar' options.
+	CLI app can now accept flac, speex or wav files as input.
+
 2012-02-28 Lefteris Zafiris <zaf.000@gmail.com> - 0.6-beta1
 	Added support for speex encoded voice data.
 	Works only with patched speex encoder that
