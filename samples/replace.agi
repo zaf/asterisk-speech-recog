@@ -1,0 +1,85 @@
+#!/usr/bin/env perl
+
+#
+# AGI script that replaces words by digits
+#
+# Copyright (C) 2012, Lefteris Zafiris <zaf.000@gmail.com>
+#
+# This program is free software, distributed under the terms of
+# the GNU General Public License Version 2. See the COPYING file
+# at the top of the source tree.
+#
+
+use warnings;
+use strict;
+$| = 1;
+
+my %AGI;
+my $debug = 0;
+
+
+# Store AGI input #
+while (<STDIN>) {
+	chomp;
+	last if (!length);
+	$AGI{$1} = $2 if (/^agi_(\w+)\:\s+(.*)$/);
+}
+($AGI{arg_1}) = @ARGV;
+
+my $name = " -- $AGI{request}:";
+
+# Reset variables. #
+warn "$name Clearing channel variable utt_num.\n" if ($debug);
+print "SET VARIABLE \"utt_num\" \"-1\"\n";
+checkresponse();
+
+# Replace words by digits
+for ($AGI{arg_1}) {
+	s/\s*one\s*/1/g;
+	s/\s*(two|to|too)\s*/2/g;
+	s/\s*(three|tree|free)\s*/3/g;
+	s/\s*(four|force)\s*/4/g;
+	s/\s*(five|fine)\s*/5/g;
+	s/\s*(six|sex)\s*/6/g;
+	s/\s*seven\s*/7/g;
+	s/\s*eight\s*/8/g;
+	s/\s*(nine|night|nite)\s*/9/g;
+	s/\s*ten\s*/10/g;
+
+	# add other words here as shown above
+
+	s/\s+//g; # Remove spaces
+	s/\D+//g; # Remove remaining non digit characters
+}
+
+# Set variable utt_num
+if ($AGI{arg_1}) {
+	warn "$name Setting channel variable utt_num to $AGI{arg_1}.\n" if ($debug);
+	print "SET VARIABLE \"utt_num\" \"$AGI{arg_1}\"\n";
+	checkresponse();
+} else {
+	warn "$name String contains no numeric characters\n";
+}
+
+exit;
+
+sub checkresponse {
+	my $input = <STDIN>;
+	my @values;
+
+	chomp $input;
+	if ($input =~ /^200/) {
+		$input =~ /result=(-?\d+)\s?(.*)$/;
+		if (!length($1)) {
+			warn "$name Command failed: $input\n";
+			@values = (-1, -1);
+		} else {
+			warn "$name Command returned: $input\n" if ($debug);
+			@values = ("$1", "$2");
+		}
+	} else {
+		warn "$name Unexpected result: $input\n";
+		@values = (-1, -1);
+	}
+	return @values;
+}
