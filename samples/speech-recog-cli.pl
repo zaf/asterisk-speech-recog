@@ -30,8 +30,7 @@ my %options;
 my $filetype;
 my $audio;
 my $ua;
-my $url;
-my $host       = "www.google.com/speech-api/v1/recognize";
+my $url        = "https://www.google.com/speech-api/v1/recognize";
 my $samplerate = 8000;
 my $language   = "en-US";
 my $output     = "detailed";
@@ -39,13 +38,15 @@ my $results    = 1;
 my $pro_filter = 0;
 my $error      = 0;
 
-getopts('l:o:r:n:fshq', \%options);
+getopts('l:o:r:n:fhq', \%options);
 
 VERSION_MESSAGE() if (defined $options{h} || !@ARGV);
 
 parse_options();
 
-$ua->agent("Mozilla/5.0 (X11; Linux) AppleWebKit/535.2 (KHTML, like Gecko)");
+
+$ua = LWP::UserAgent->new(ssl_opts => {verify_hostname => 1});
+$ua->agent("Mozilla/5.0 (X11; Linux) AppleWebKit/537.1 (KHTML, like Gecko)");
 $ua->env_proxy;
 $ua->conn_cache(LWP::ConnCache->new());
 $ua->timeout(20);
@@ -69,7 +70,7 @@ foreach my $file (@ARGV) {
 			next;
 		}
 	}
-	print("Openning $file\n") if (!defined $options{q});
+	print("Openning $filename\n") if (!defined $options{q});
 	if (open(my $fh, "<", "$file")) {
 		$audio = do { local $/; <$fh> };
 		close($fh);
@@ -146,14 +147,6 @@ sub parse_options {
 	# set audio sampling rate #
 		$samplerate = $options{r} if ($options{r} =~ /\d+/);
 	}
-	if (defined $options{s}) {
-	# Set up connection type #
-		$url = "https://" . $host;
-		$ua  = LWP::UserAgent->new(ssl_opts => {verify_hostname => 1});
-	} else {
-		$url = "http://" . $host;
-		$ua  = LWP::UserAgent->new;
-	}
 	# set profanity filter #
 	$pro_filter = 2 if (defined $options{f});
 
@@ -205,7 +198,6 @@ sub VERSION_MESSAGE {
 		" -r <rate>      specify the audio sample rate in Hz (deafult 8000)\n",
 		" -n <number>    specify the maximum number of results (default 1)\n",
 		" -f             filter out profanities\n",
-		" -s             use SSL to encrypt web trafic\n",
 		" -q             don't print any error messages or warnings\n",
 		" -h             this help message\n\n";
 	exit(1);

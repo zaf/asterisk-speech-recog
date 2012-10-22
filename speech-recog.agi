@@ -205,7 +205,7 @@ if ($use_ssl) {
 $language = escape($language);
 $grammar  = escape($grammar);
 $url .= "?xjerr=1&client=chromium&lang=$language&pfilter=$pro_filter&lm=$grammar&maxresults=$results";
-$ua->agent("Mozilla/5.0 (X11; Linux) AppleWebKit/535.2 (KHTML, like Gecko)");
+$ua->agent("Mozilla/5.0 (X11; Linux) AppleWebKit/537.1 (KHTML, like Gecko)");
 $ua->env_proxy;
 $ua->timeout($ua_timeout);
 
