@@ -20,6 +20,7 @@
 
 use strict;
 use warnings;
+use URI::Escape;
 use File::Temp qw(tempfile);
 use Getopt::Std;
 use File::Basename;
@@ -80,6 +81,9 @@ foreach my $file (@ARGV) {
 		next;
 	}
 
+	$language   = uri_escape($language);
+	$pro_filter = uri_escape($pro_filter);
+	$results    = uri_escape($results);
 	my $response = $ua->post(
 		"$url?xjerr=1&client=chromium&lang=$language&pfilter=$pro_filter&maxresults=$results",
 		Content_Type => "audio/$filetype; rate=$samplerate",
