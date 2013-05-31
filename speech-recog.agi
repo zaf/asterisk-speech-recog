@@ -55,7 +55,7 @@
 
 use warnings;
 use strict;
-use CGI::Util qw(escape);
+use URI::Escape;
 use File::Copy qw(move);
 use File::Temp qw(tempfile);
 use LWP::UserAgent;
@@ -202,8 +202,8 @@ if ($use_ssl) {
 	$url = "http://" . $host;
 	$ua  = LWP::UserAgent->new;
 }
-$language = escape($language);
-$grammar  = escape($grammar);
+$language = uri_escape($language);
+$grammar  = uri_escape($grammar);
 $url .= "?xjerr=1&client=chromium&lang=$language&pfilter=$pro_filter&lm=$grammar&maxresults=$results";
 $ua->agent("Mozilla/5.0 (X11; Linux) AppleWebKit/537.1 (KHTML, like Gecko)");
 $ua->env_proxy;
