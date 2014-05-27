@@ -10,6 +10,7 @@ Requirements
 ------------
 Perl          The Perl Programming Language
 perl-libwww   The World-Wide Web library for Perl
+perl-libjson  Module for manipulating JSON-formatted data
 IO-Socket-SSL Perl module that implements an interface to SSL sockets.
 flac          Free Lossless Audio Codec
 
@@ -41,8 +42,6 @@ The recorded sound is send over to googles speech recognition service and the
 returned text string is assigned as the value of the channel variable 'utterance'.
 The scripts sets the following channel variables:
 
-status     : Return status. 0 means success, non zero values indicating different errors.
-id         : Some id string that googles engine returns, not very useful(?).
 utterance  : The generated text string.
 confidence : A value between 0 and 1 indicating the probability of a correct recognition.
              Values bigger than 0.95 usually mean that the resulted text is correct.
@@ -63,13 +62,10 @@ exten => 1234,n,Hangup()
 exten => 1235,1,Answer()
 exten => 1235,n,agi(googletts.agi,"Say something in English, when done press the pound key.",en)
 exten => 1235,n(record),agi(speech-recog.agi,en-US)
-exten => 1235,n,Verbose(1,Script returned: ${status} , ${id} , ${confidence} , ${utterance})
-
-;Check return status:
-exten => 1235,n,GotoIf($["${status}" = "0"]?success:fail)
+exten => 1235,n,Verbose(1,Script returned: ${confidence} , ${utterance})
 
 ;Check the probability of a successful recognition:
-exten => 1235,n(success),GotoIf($["${confidence}" > "0.8"]?playback:retry)
+exten => 1235,n,GotoIf($["${confidence}" > "0.8"]?playback:retry)
 
 ;Playback the text
 exten => 1235,n(playback),agi(googletts.agi,"The text you just said was...",en)
@@ -87,7 +83,7 @@ exten => 1235,n(end),Hangup()
 exten => 1236,1,Answer()
 exten => 1236,n,agi(googletts.agi,"PLease say the number you want to dial.",en)
 exten => 1236,n(record),agi(speech-recog.agi,en-US)
-exten => 1236,n,GotoIf($[$["${status}" = "0"] & $["${confidence}" > "0.8"]]?success:retry)
+exten => 1236,n,GotoIf($["${confidence}" > "0.8"]?success:retry)
 
 exten => 1236,n(success),goto(${utterance},1)
 
