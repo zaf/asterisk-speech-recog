@@ -259,19 +259,6 @@ $uaresponse = $ua->post(
 );
 die "$name Unable to get speech data.\n" if (!$uaresponse->is_success);
 
-if ($uaresponse->content =~ /^\{"status":(\d*),"id":"(.*)","hypotheses":\[(.*)\]\}$/) {
-	$response{status} = "$1";
-	$response{id}     = "$2";
-	warn "$name Error reading audio file\n" if ($response{status} != 0);
-
-	if ($3 =~ /^\{"utterance":"(.*)","confidence":(.*)\}/) {
-		$response{utterance}  = "$1";
-		$response{confidence} = "$2";
-		# Remove spaces between digits #
-		$response{utterance}  =~ s/(\d)\s(\d)/$1$2/g;
-	}
-}
-
 foreach (split(/\n/,$uaresponse->content)) {
 	my $jdata = decode_json($_);
 		for ( @{$jdata->{result}[0]->{alternative}} ) {
