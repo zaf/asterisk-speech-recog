@@ -208,7 +208,7 @@ if ($use_ssl) {
 }
 $language = uri_escape($language);
 $grammar  = uri_escape($grammar);
-$url .= "?$key=$key&lang=$language&pfilter=$pro_filter&lm=$grammar&maxresults=$results";
+$url .= "?key=$key&lang=$language&pfilter=$pro_filter&lm=$grammar&maxresults=$results";
 $ua->agent("Asterisk AGI speeech recognition script");
 $ua->env_proxy;
 $ua->timeout($ua_timeout);
