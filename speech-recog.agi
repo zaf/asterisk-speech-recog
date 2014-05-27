@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 
 #
-# AGI script that renders speech to text using Google's speech recognition engine.
+# AGI script that renders speech to text using Google's Speech API.
 #
 # Copyright (C) 2011 - 2014, Lefteris Zafiris <zaf.000@gmail.com>
 #
@@ -20,14 +20,15 @@
 # The recorded sound is send over to googles speech recognition service and the
 # returned text string is assigned as the value of the channel variable 'utterance'.
 # The scripts sets the following channel variables:
-# status     : Return status. 0 means success, non zero values indicate different errors.
-# id         : Some id string that googles engine returns, not very useful(?).
 # utterance  : The generated text string.
 # confidence : A value between 0 and 1 indicating how 'confident' the recognition engine
 #     feels about the result. Values bigger than 0.95 usually mean that the
 #     resulted text is correct.
 #
 # User defined parameters:
+# Speech API key from google:
+#	$key
+#
 # Default language:
 #	$language
 #
@@ -59,11 +60,15 @@ use URI::Escape;
 use File::Copy qw(move);
 use File::Temp qw(tempfile);
 use LWP::UserAgent;
+use JSON;
 $| = 1;
 
 # ----------------------------- #
 #   User defined parameters:    #
 # ----------------------------- #
+# Speech API key                #
+my $key = "";
+
 # Default language              #
 my $language = "en-US";
 
@@ -111,7 +116,7 @@ my $beep       = "BEEP";
 my $comp_level = -8;
 my $ua_timeout = 10;
 my $tmpdir     = "/tmp";
-my $host       = "www.google.com/speech-api/v1/recognize";
+my $host       = "www.google.com/speech-api/v2/recognize";
 my $flac       = `/usr/bin/which flac`;
 my $speex      = `/usr/bin/which speexenc`;
 
@@ -128,8 +133,6 @@ $name = " -- $AGI{request}:";
 # Reset variables. #
 %response = (
 	utterance  => -1,
-	status     => -1,
-	id         => -1,
 	confidence => -1,
 );
 warn "$name Clearing channel variables.\n" if ($debug);
@@ -138,7 +141,8 @@ foreach (keys %response) {
 	checkresponse();
 }
 
-# Abort if required programs not found. #
+# Abort if key is missing or required programs not found. #
+die "$name API key is missing. Aborting\n" if (!$key);
 if ($use_speex) {
 	die "$name speexenc is missing. Aborting.\n" if (!$speex);
 	chomp($speex);
@@ -204,8 +208,8 @@ if ($use_ssl) {
 }
 $language = uri_escape($language);
 $grammar  = uri_escape($grammar);
-$url .= "?xjerr=1&client=chromium&lang=$language&pfilter=$pro_filter&lm=$grammar&maxresults=$results";
-$ua->agent("Mozilla/5.0 (X11; Linux) AppleWebKit/537.1 (KHTML, like Gecko)");
+$url .= "?$key=$key&lang=$language&pfilter=$pro_filter&lm=$grammar&maxresults=$results";
+$ua->agent("Asterisk AGI speeech recognition script");
 $ua->env_proxy;
 $ua->timeout($ua_timeout);
 
@@ -268,6 +272,13 @@ if ($uaresponse->content =~ /^\{"status":(\d*),"id":"(.*)","hypotheses":\[(.*)\]
 	}
 }
 
+foreach (split(/\n/,$uaresponse->content)) {
+	my $jdata = decode_json($_);
+		for ( @{$jdata->{result}[0]->{alternative}} ) {
+			$response{utterance}  = $_->{transcript};
+			$response{confidence} = $_->{confidence};
+		}
+}
 warn "$name The response was:\n", $uaresponse->content if ($debug);
 
 foreach (keys %response) {

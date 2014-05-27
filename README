@@ -2,9 +2,8 @@
     Speech recognition script for Asterisk
 ==============================================
 
-This script makes use of Google's speech recognition engine
-in order to render speech to text and return it back to the dialplan
-as an asterisk channel variable.
+This script makes use of Google's Speech API in order to render speech
+to text and return it back to the dialplan as an asterisk channel variable.
 
 ------------
 Requirements
@@ -13,6 +12,8 @@ Perl          The Perl Programming Language
 perl-libwww   The World-Wide Web library for Perl
 IO-Socket-SSL Perl module that implements an interface to SSL sockets.
 flac          Free Lossless Audio Codec
+
+Speech API key from Google.
 Internet access in order to contact google and get the speech data.
 
 ** Optional/Highly experimental **

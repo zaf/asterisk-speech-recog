@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 
 #
-# Render speech to text using Google's speech recognition engine.
+# Render speech to text using Google's Speech API.
 #
 # Copyright (C) 2011 - 2014, Lefteris Zafiris <zaf.000@gmail.com>
 #
@@ -26,12 +26,14 @@ use Getopt::Std;
 use File::Basename;
 use LWP::UserAgent;
 use LWP::ConnCache;
+use JSON;
 
 my %options;
 my $filetype;
 my $audio;
 my $ua;
-my $url        = "https://www.google.com/speech-api/v1/recognize";
+my $key;
+my $url        = "https://www.google.com/speech-api/v2/recognize";
 my $samplerate = 8000;
 my $language   = "en-US";
 my $output     = "detailed";
@@ -39,7 +41,7 @@ my $results    = 1;
 my $pro_filter = 0;
 my $error      = 0;
 
-getopts('l:o:r:n:fhq', \%options);
+getopts('k:l:o:r:n:fhq', \%options);
 
 VERSION_MESSAGE() if (defined $options{h} || !@ARGV);
 
@@ -47,7 +49,7 @@ parse_options();
 
 
 $ua = LWP::UserAgent->new(ssl_opts => {verify_hostname => 1});
-$ua->agent("Mozilla/5.0 (X11; Linux) AppleWebKit/537.1 (KHTML, like Gecko)");
+$ua->agent("CLI speeech recognition script");
 $ua->env_proxy;
 $ua->conn_cache(LWP::ConnCache->new());
 $ua->timeout(20);
@@ -85,39 +87,38 @@ foreach my $file (@ARGV) {
 	$pro_filter = uri_escape($pro_filter);
 	$results    = uri_escape($results);
 	my $response = $ua->post(
-		"$url?xjerr=1&client=chromium&lang=$language&pfilter=$pro_filter&maxresults=$results",
+		"$url?lang=$language&pfilter=$pro_filter&maxresults=$results&key=$key",
 		Content_Type => "audio/$filetype; rate=$samplerate",
 		Content      => "$audio",
 	);
 	if (!$response->is_success) {
-		say_msg("Failed to get data for file:$file");
+		say_msg("Failed to get data for file: $file");
 		++$error;
 		next;
 	}
 	my %response;
-	if ($response->content =~ /^\{"status":(\d*),"id":"([0-9a-z\-]*)","hypotheses":\[(.*)\]\}$/) {
-		$response{status} = "$1";
-		$response{id}     = "$2";
-		if ($response{status} != 0) {
-			say_msg("Error reading audio file");
-			++$error;
-		}
-
-		foreach (split(/,/, $3)) {
-			$response{confidence} = $1 if /"confidence":([0-9.]+)/;
-			push(@{$response{utterance}}, "$1") if /"utterance":"(.*?)"/gs;
-		}
+	foreach (split(/\n/,$response->content)) {
+		my $jdata = decode_json($_);
+			for ( @{$jdata->{result}[0]->{alternative}} ) {
+				push(@{$response{transcript}}, $_->{transcript});
+				$response{confidence} = $_->{confidence} if ($_->{confidence});
+			}
+	}
+	if (!$response{transcript}) {
+		say_msg("Failed to transcript file: $file");
+		++$error;
+		next;
 	}
 	if ($output eq "detailed") {
 		foreach my $key (keys %response) {
-			if ($key eq "utterance") {
+			if ($key eq "transcript") {
 				printf "%-10s : %s\n", $key, $_ foreach (@{$response{$key}});
 			} else {
 				printf "%-10s : %s\n", $key, $response{$key};
 			}
 		}
 	} elsif ($output eq "compact") {
-		print "$_\n" foreach (@{$response{utterance}});
+ 		print "$_\n" foreach (@{$response{transcript}});
 	} elsif ($output eq "raw") {
 		print $response->content;
 	}
@@ -127,6 +128,13 @@ exit(($error) ? 1 : 0);
 
 sub parse_options {
 # Command line options parsing #
+	if (defined $options{k}) {
+	# check API key #
+		$key = $options{k};
+	} else {
+		say_msg("Invalid or missing API key.\n");
+		exit 1;
+	}
 	if (defined $options{l}) {
 	# check if language setting is valid #
 		if ($options{l} =~ /^[a-z]{2}(-[a-zA-Z]{2,6})?$/) {
@@ -194,6 +202,7 @@ sub VERSION_MESSAGE {
 	print "Speech recognition using google voice API.\n\n",
 		"Usage: $0 [options] [file(s)]\n\n",
 		"Supported options:\n",
+		" -k <key>       specify the Speech API key\n",
 		" -l <lang>      specify the language to use (default 'en-US')\n",
 		" -o <type>      specify the type of output fomratting\n",
 		"    detailed    print detailed info like confidence and return status (default)\n",
