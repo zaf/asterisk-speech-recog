@@ -199,7 +199,7 @@ sub say_msg {
 
 sub VERSION_MESSAGE {
 # Help message #
-	print "Speech recognition using google voice API.\n\n",
+	print "Speech recognition using google Speech API.\n\n",
 		"Usage: $0 [options] [file(s)]\n\n",
 		"Supported options:\n",
 		" -k <key>       specify the Speech API key\n",

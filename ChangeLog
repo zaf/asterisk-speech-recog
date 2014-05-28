@@ -1,4 +1,7 @@
-2012-30-09 Lefteris Zafiris <zaf.000@gmail.com> - 0.6
+2014-05-28 Lefteris Zafiris <zaf.000@gmail.com> - 0.7
+	Added support for version 2 of Speech API.
+
+2012-09-30 Lefteris Zafiris <zaf.000@gmail.com> - 0.6
 	Added automatic audio format detection. Enabled SSL by default.
 	Proxy support. Added profanities filtering option.
 	Added 'maxresults' and 'grammar' options.
