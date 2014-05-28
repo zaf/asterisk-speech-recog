@@ -99,10 +99,10 @@ foreach my $file (@ARGV) {
 	my %response;
 	foreach (split(/\n/,$response->content)) {
 		my $jdata = decode_json($_);
-			for ( @{$jdata->{result}[0]->{alternative}} ) {
-				push(@{$response{transcript}}, $_->{transcript});
-				$response{confidence} = $_->{confidence} if ($_->{confidence});
-			}
+		for ( @{$jdata->{result}[0]->{alternative}} ) {
+			push(@{$response{transcript}}, $_->{transcript});
+			$response{confidence} = $_->{confidence} if ($_->{confidence});
+		}
 	}
 	if (!$response{transcript}) {
 		say_msg("Failed to transcript file: $file");
@@ -205,8 +205,8 @@ sub VERSION_MESSAGE {
 		" -k <key>       specify the Speech API key\n",
 		" -l <lang>      specify the language to use (default 'en-US')\n",
 		" -o <type>      specify the type of output fomratting\n",
-		"    detailed    print detailed info like confidence and return status (default)\n",
-		"    compact     print only the recognized utterance\n",
+		"    detailed    print detailed output with info like confidence (default)\n",
+		"    compact     print only the transcripted string\n",
 		"    raw         raw JSON output\n",
 		" -r <rate>      specify the audio sample rate in Hz (deafult 8000)\n",
 		" -n <number>    specify the maximum number of results (default 1)\n",

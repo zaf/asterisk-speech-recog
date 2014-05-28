@@ -261,10 +261,10 @@ die "$name Unable to get speech data.\n" if (!$uaresponse->is_success);
 
 foreach (split(/\n/,$uaresponse->content)) {
 	my $jdata = decode_json($_);
-		for ( @{$jdata->{result}[0]->{alternative}} ) {
-			$response{utterance}  = $_->{transcript};
-			$response{confidence} = $_->{confidence};
-		}
+	for ( @{$jdata->{result}[0]->{alternative}} ) {
+		$response{utterance}  = $_->{transcript};
+		$response{confidence} = $_->{confidence};
+	}
 }
 warn "$name The response was:\n", $uaresponse->content if ($debug);
 
