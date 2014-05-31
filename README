@@ -46,6 +46,8 @@ utterance  : The generated text string.
 confidence : A value between 0 and 1 indicating the probability of a correct recognition.
              Values bigger than 0.95 usually mean that the resulted text is correct.
 
+In case of an unxpected error both these variables are set to '-1'.
+
 --------
 Examples
 --------

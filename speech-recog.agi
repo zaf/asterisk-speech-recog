@@ -142,7 +142,11 @@ foreach (keys %response) {
 }
 
 # Abort if key is missing or required programs not found. #
-die "$name API key is missing. Aborting\n" if (!$key);
+if (!$key) {
+	print "VERBOSE \"API key is missing. Aborting.\" 3\n";
+	checkresponse();
+	die "$name API key is missing. Aborting.\n";
+}
 if ($use_speex) {
 	die "$name speexenc is missing. Aborting.\n" if (!$speex);
 	chomp($speex);
@@ -257,7 +261,11 @@ $uaresponse = $ua->post(
 	Content_Type => "audio/$filetype; rate=$samplerate",
 	Content      => "$audio",
 );
-die "$name Unable to get speech data.\n" if (!$uaresponse->is_success);
+if (!$uaresponse->is_success) {
+	print "VERBOSE \"Unable to get recognition data.\" 3\n";
+	checkresponse();
+	die "$name Unable to get recognition data.\n";
+}
 
 foreach (split(/\n/,$uaresponse->content)) {
 	my $jdata = decode_json($_);
