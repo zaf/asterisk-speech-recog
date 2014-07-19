@@ -53,7 +53,7 @@ my $var_name = "wolfram_answer";
 my $results  = 0;
 
 # Store AGI input #
-$AGI{arg_1}) = @ARGV;
+($AGI{arg_1}) = @ARGV;
 while (<STDIN>) {
 	chomp;
 	last if (!length);
