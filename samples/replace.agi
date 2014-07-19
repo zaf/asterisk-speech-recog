@@ -19,12 +19,12 @@ my $debug = 0;
 
 
 # Store AGI input #
+($AGI{arg_1}) = @ARGV;
 while (<STDIN>) {
 	chomp;
 	last if (!length);
 	$AGI{$1} = $2 if (/^agi_(\w+)\:\s+(.*)$/);
 }
-($AGI{arg_1}) = @ARGV;
 
 my $name = " -- $AGI{request}:";
 
