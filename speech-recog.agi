@@ -61,6 +61,8 @@ use File::Copy qw(move);
 use File::Temp qw(tempfile);
 use LWP::UserAgent;
 use JSON;
+use Encode qw(encode);
+use utf8;
 $| = 1;
 
 # ----------------------------- #
@@ -270,7 +272,7 @@ if (!$uaresponse->is_success) {
 foreach (split(/\n/,$uaresponse->content)) {
 	my $jdata = decode_json($_);
 	for ( @{$jdata->{result}[0]->{alternative}} ) {
-		$response{utterance}  = $_->{transcript};
+		$response{utterance}  = encode('utf8', $_->{transcript});
 		$response{confidence} = $_->{confidence};
 	}
 }
