@@ -62,7 +62,7 @@ use File::Temp qw(tempfile);
 use LWP::UserAgent;
 use JSON;
 use Encode qw(encode);
-use utf8;
+
 $| = 1;
 
 # ----------------------------- #
