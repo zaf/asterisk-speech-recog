@@ -170,6 +170,15 @@ the resulted text. The script uses SSL by default to encrypt all the traffic bet
 your pbx and google servers so no 3rd party can eavesdrop your communication, but your
 voice data will be available to Google under a not yet defined policy.
 
+------------
+Tiny version
+------------
+The '-tiny' suffixed scripts use the HTTP::Tiny perl module instead of LWP::UserAgent and
+JSON::Tiny instead of JSON. This makes them a lot faster when run in small embedded systems
+or boards like the Raspberry pi. They can be used as an in-place replacement of the normal
+scripts and expose the same interface/cli args. To use them just make sure
+you have HTTP::Tiny and JSON::Tinyinstalled.
+
 -------
 License
 -------

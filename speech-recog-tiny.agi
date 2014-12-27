@@ -59,8 +59,8 @@ use strict;
 use URI::Escape;
 use File::Copy qw(move);
 use File::Temp qw(tempfile);
-use LWP::UserAgent;
-use JSON;
+use HTTP::Tiny;
+use JSON::Tiny qw(decode_json);
 use Encode qw(encode);
 
 $| = 1;
@@ -99,7 +99,7 @@ my $debug = 0;
 # ----------------------------- #
 
 my %AGI;
-my $ua;
+my $http;
 my $fh;
 my $tmpname;
 my $format;
@@ -117,7 +117,7 @@ my $speex;
 my $results    = 1;
 my $grammar    = "builtin:dictation"; #"builtin:search";
 my $beep       = "BEEP";
-my $comp_level = -8;
+my $comp_level = -1;
 my $ua_timeout = 10;
 my $tmpdir     = "/tmp";
 my $host       = "www.google.com/speech-api/v2/recognize";
@@ -209,17 +209,22 @@ else                         { ($format, $samplerate) =  ("sln", 8000); }
 # Initialise User angent #
 if ($use_ssl) {
 	$url = "https://" . $host;
-	$ua  = LWP::UserAgent->new(ssl_opts => {verify_hostname => 1});
+	$http = HTTP::Tiny->new(
+		agent      => 'Asterisk AGI speeech recognition script',
+		timeout    => $ua_timeout,
+		verify_SSL => 1,
+	);
 } else {
 	$url = "http://" . $host;
-	$ua  = LWP::UserAgent->new;
+	$http = HTTP::Tiny->new(
+		agent   => 'Asterisk AGI speeech recognition script',
+		timeout => $ua_timeout,
+	);
 }
 $language = uri_escape($language);
 $grammar  = uri_escape($grammar);
 $url .= "?key=$key&lang=$language&pfilter=$pro_filter&lm=$grammar&maxresults=$results";
-$ua->agent("Asterisk AGI speeech recognition script");
-$ua->env_proxy;
-$ua->timeout($ua_timeout);
+
 
 # Hnadle interrupts #
 $SIG{'INT'} = \&int_handler;
@@ -260,18 +265,16 @@ $audio = do { local $/; <$fh> };
 close($fh);
 
 # Send adio data for analysis #
-$uaresponse = $ua->post(
-	"$url",
-	Content_Type => "audio/$filetype; rate=$samplerate",
-	Content      => "$audio",
-);
-if (!$uaresponse->is_success) {
+my %headers =('Content-Type' => "audio/$filetype; rate=$samplerate");
+my %options = ('headers' => \%headers, 'content' => $audio);
+$uaresponse = $http->request('POST', "$url", \%options);
+if (!$uaresponse->{'success'}) {
 	print "VERBOSE \"Unable to get recognition data.\" 3\n";
 	checkresponse();
 	die "$name Unable to get recognition data.\n";
 }
 
-foreach (split(/\n/,$uaresponse->content)) {
+foreach (split(/\n/,$uaresponse->{'content'})) {
 	my $jdata = decode_json($_);
 	for ( @{$jdata->{result}[0]->{alternative}} ) {
 		$response{utterance}  = encode('utf8', $_->{transcript});
