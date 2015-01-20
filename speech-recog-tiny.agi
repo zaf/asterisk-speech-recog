@@ -77,6 +77,9 @@ my $language = "en-US";
 # Default max silence timeout   #
 my $timeout = 2;
 
+# Absolute Recording timeout    #
+my $abs_timeout = -1;
+
 # Default interrupt key         #
 my $intkey = "#";
 
@@ -232,7 +235,7 @@ $SIG{'HUP'} = \&int_handler;
 
 # Record file #
 ($fh, $tmpname) = tempfile("stt_XXXXXX", DIR => $tmpdir, UNLINK => 1);
-print "RECORD FILE $tmpname $format \"$intkey\" \"-1\" $beep \"$silence\"\n";
+print "RECORD FILE $tmpname $format \"$intkey\" \"$abs_timeout\" $beep \"$silence\"\n";
 @result = checkresponse();
 die "$name Failed to record file, aborting...\n" if ($result[0] == -1);
 
