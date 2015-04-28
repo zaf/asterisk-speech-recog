@@ -3,7 +3,7 @@
 #
 # AGI script that renders speech to text using Google's Speech API.
 #
-# Copyright (C) 2011 - 2014, Lefteris Zafiris <zaf.000@gmail.com>
+# Copyright (C) 2011 - 2015, Lefteris Zafiris <zaf.000@gmail.com>
 #
 # This program is free software, distributed under the terms of
 # the GNU General Public License Version 2. See the COPYING file
@@ -45,11 +45,6 @@
 # Profanity filter:
 #	$pro_filter (0:disable, 1: remove profanities, 2: mask profanities)
 #
-# Encode voice using speex:
-#   $use_speex (0: disable, 1: enable) **_Highly experimental_**
-#   works only with patched speex encoder that supports MIME "x-speex-with-header-byte"
-#   https://github.com/zaf/Speex-with-header-bytes
-#
 # SSL:
 #	$use_ssl (0: disable, 1: enable)
 #
@@ -90,9 +85,6 @@ my $samplerate = "";
 # Profanity filter              #
 my $pro_filter = 0;
 
-# Use speex                     #
-my $use_speex = 0;
-
 # Use SSL                       #
 my $use_ssl = 1;
 
@@ -111,12 +103,10 @@ my $name;
 my $audio;
 my $uaresponse;
 my %response;
-my $endian;
 my $url;
 my $silence;
 my $filetype;
 my $flac;
-my $speex;
 my $results    = 1;
 my $grammar    = "builtin:dictation"; #"builtin:search";
 my $beep       = "BEEP";
@@ -152,17 +142,11 @@ if (!$key) {
 	checkresponse();
 	die "$name API key is missing. Aborting.\n";
 }
-if ($use_speex) {
-	$speex = `/usr/bin/which speexenc`;
-	die "$name speexenc is missing. Aborting.\n" if (!$speex);
-	chomp($speex);
-	warn "$name Found speexenc in: $speex\n" if ($debug);
-} else {
-	$flac = `/usr/bin/which flac`;
-	die "$name flac is missing. Aborting.\n" if (!$flac);
-	chomp($flac);
-	warn "$name Found flac in: $flac\n" if ($debug);
-}
+
+$flac = `/usr/bin/which flac`;
+die "$name flac is missing. Aborting.\n" if (!$flac);
+chomp($flac);
+warn "$name Found flac in: $flac\n" if ($debug);
 
 # Setting language, timeout, interrupt keys and BEEP indication #
 if (length($AGI{arg_1})) {
@@ -241,28 +225,15 @@ die "$name Failed to record file, aborting...\n" if ($result[0] == -1);
 
 if ($debug) {
 	warn "$name Recording Format: $format, Rate: $samplerate Hz, ",
-		"Encoding format: ", ($use_speex) ? "speex" : "flac", "\n",
 		"$name Languge: $language, SSL: ", ($use_ssl) ? "yes, " : "no, ",
 		"$silence, Interrupt keys: $intkey\n";
 }
 
 # Encode sound data #
-if ($use_speex) {
-	$filetype = "x-speex-with-header-byte";
-	$endian = (unpack("h*", pack("s", 1)) =~ /01/) ? "--be" : "--le";
-	# Encode file to speex. #
-	system($speex, "--vbr", "--rate", $samplerate, "--headerbyte", "--quiet", $endian,
-		"$tmpname.$format", "$tmpname.spx") == 0 or die "$name $speex failed: $?\n";
-	open($fh, "<", "$tmpname.spx") or die "Can't read file: $!";
-} else {
-	$filetype = "x-flac";
-	$endian = (unpack("h*", pack("s", 1)) =~ /01/) ? "big" : "little";
-	# Encode file to flac. #
-	system($flac, $comp_level, "--totally-silent", "--channels=1", "--endian=$endian",
-		"--sign=signed", "--bps=16", "--force-raw-format", "--sample-rate=$samplerate",
-		"$tmpname.$format") == 0 or die "$name $flac failed: $?\n";
-	open($fh, "<", "$tmpname.flac") or die "Can't read file: $!";
-}
+$filetype = "x-flac";
+system($flac, $comp_level, "--totally-silent", "--channels=1", "--sign=signed", "--bps=16",
+	"--force-raw-format", "--sample-rate=$samplerate", "$tmpname.$format") == 0 or die "$name $flac failed: $?\n";
+open($fh, "<", "$tmpname.flac") or die "Can't read file: $!";
 
 $audio = do { local $/; <$fh> };
 close($fh);
