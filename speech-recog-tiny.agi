@@ -231,7 +231,7 @@ if ($debug) {
 
 # Encode sound data #
 $filetype = "x-flac";
-system($flac, $comp_level, "--totally-silent", "--channels=1", "--sign=signed", "--bps=16",
+system($flac, $comp_level, "--totally-silent", "--channels=1", "--sign=signed", "--bps=16", "--endian=little",
 	"--force-raw-format", "--sample-rate=$samplerate", "$tmpname.$format") == 0 or die "$name $flac failed: $?\n";
 open($fh, "<", "$tmpname.flac") or die "Can't read file: $!";
 
