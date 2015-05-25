@@ -255,7 +255,7 @@ foreach (split(/\n/,$uaresponse->{'content'})) {
 		$response{confidence} = $_->{confidence};
 	}
 }
-warn "$name The response was:\n", $uaresponse->content if ($debug);
+warn "$name The response was:\n", $uaresponse->{'content'} if ($debug);
 
 foreach (keys %response) {
 	warn "$name Setting variable: $_ = $response{$_}\n" if ($debug);
