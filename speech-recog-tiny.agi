@@ -181,7 +181,10 @@ print "CHANNEL STATUS\n";
 if ($result[0] == 4) {
 	warn "$name Answering channel.\n" if ($debug);
 	print "ANSWER\n";
-	checkresponse();
+	@result = checkresponse();
+	if ($result[0] != 0) {
+		die "$name Failed to answer channel.\n";
+	}
 }
 
 # Setting recording file format according to sample rate. #
@@ -279,6 +282,7 @@ sub checkresponse {
 			@values = ("$1", "$2");
 		}
 	} else {
+		$input .= <STDIN> if ($input =~ /^520-Invalid/);
 		warn "$name Unexpected result: $input\n";
 		@values = (-1, -1);
 	}
