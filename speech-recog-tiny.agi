@@ -272,15 +272,9 @@ sub checkresponse {
 	my @values;
 
 	chomp $input;
-	if ($input =~ /^200/) {
-		$input =~ /result=(-?\d+)\s?(.*)$/;
-		if (!length($1)) {
-			warn "$name Command failed: $input\n";
-			@values = (-1, -1);
-		} else {
-			warn "$name Command returned: $input\n" if ($debug);
-			@values = ("$1", "$2");
-		}
+	if ($input =~ /^200 result=(-?\d+)\s?(.*)$/) {
+		warn "$name Command returned: $input\n" if ($debug);
+		@values = ("$1", "$2");
 	} else {
 		$input .= <STDIN> if ($input =~ /^520-Invalid/);
 		warn "$name Unexpected result: $input\n";
