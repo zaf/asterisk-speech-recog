@@ -279,7 +279,7 @@ if (!$uaresponse->is_success) {
 
 foreach (split(/\n/,$uaresponse->content)) {
 	my $jdata = decode_json($_);
-	for ( @{$jdata->{result}[0]->{alternative}} ) {
+	for ( $jdata->{result}[0]->{alternative}[0] ) {
 		$response{utterance}  = encode('utf8', $_->{transcript});
 		$response{confidence} = $_->{confidence};
 	}

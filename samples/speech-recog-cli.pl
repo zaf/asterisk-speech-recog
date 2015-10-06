@@ -99,9 +99,9 @@ foreach my $file (@ARGV) {
 	my %response;
 	foreach (split(/\n/,$response->content)) {
 		my $jdata = decode_json($_);
-		for ( @{$jdata->{result}[0]->{alternative}} ) {
-			push(@{$response{transcript}}, $_->{transcript});
-			$response{confidence} = $_->{confidence} if ($_->{confidence});
+		for (0 .. $results-1) {
+			push(@{$response{transcript}}, $jdata->{result}[0]->{alternative}[$_]->{transcript}) if $jdata->{result}[0]->{alternative}[$_]->{transcript};
+			$response{confidence} = $jdata->{result}[0]->{alternative}[$_]->{confidence} if $jdata->{result}[0]->{alternative}[$_]->{confidence};
 		}
 	}
 	if (!$response{transcript}) {
