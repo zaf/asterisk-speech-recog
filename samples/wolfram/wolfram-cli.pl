@@ -3,7 +3,7 @@
 #
 # Submit queries to WolframAlpha and print the answers.
 #
-# Copyright (C) 2012 - 2014, Lefteris Zafiris <zaf.000@gmail.com>
+# Copyright (C) 2012 - 2014, Lefteris Zafiris <zaf@fastmail.com>
 #
 # This program is free software, distributed under the terms of
 # the GNU General Public License Version 2. See the COPYING file

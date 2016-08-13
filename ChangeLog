@@ -1,13 +1,13 @@
-2014-05-28 Lefteris Zafiris <zaf.000@gmail.com> - 0.7
+2014-05-28 Lefteris Zafiris <zaf@fastmail.com> - 0.7
 	Added support for version 2 of Speech API.
 
-2012-09-30 Lefteris Zafiris <zaf.000@gmail.com> - 0.6
+2012-09-30 Lefteris Zafiris <zaf@fastmail.com> - 0.6
 	Added automatic audio format detection. Enabled SSL by default.
 	Proxy support. Added profanities filtering option.
 	Added 'maxresults' and 'grammar' options.
 	CLI app can now accept flac, speex or wav files as input.
 
-2012-02-28 Lefteris Zafiris <zaf.000@gmail.com> - 0.6-beta1
+2012-02-28 Lefteris Zafiris <zaf@fastmail.com> - 0.6-beta1
 	Added support for speex encoded voice data.
 	Works only with patched speex encoder that
 	supports MIME "x-speex-with-header-byte":
@@ -15,7 +15,7 @@
 	Speex support is experimental and detection rates are
 	lower compared to flac encoded data.
 
-2012-02-01 Lefteris Zafiris <zaf.000@gmail.com> - 0.5
+2012-02-01 Lefteris Zafiris <zaf@fastmail.com> - 0.5
 	Added SSL support. Interrupt keys can now be defined
 	by the user. Added (optional) Beep indication before recording.
 	Recording time is now conrtolled by silence detection. There is no
@@ -25,23 +25,23 @@
 	Added a sample AGI script that submits queries to WolframAlpha and
 	sets the answer as a dialplan variable.
 
-2012-01-10 Lefteris Zafiris <zaf.000@gmail.com> - 0.4
+2012-01-10 Lefteris Zafiris <zaf@fastmail.com> - 0.4
 	Added option for user defined timeout.
 	Remove spaces between digits in returning text string.
 	Documentation updates.
 
-2012-01-05 Lefteris Zafiris <zaf.000@gmail.com> - 0.3
+2012-01-05 Lefteris Zafiris <zaf@fastmail.com> - 0.3
 	Replaced sox with flac encoder for compatibility
 	with older distros (RHEL 5). Sox can be enabled
 	by the user.
 	When sox is in use it normalizes the audio, removes
 	low frequency noise and possible DC offset.
 
-2012-01-04 Lefteris Zafiris <zaf.000@gmail.com> - 0.2
+2012-01-04 Lefteris Zafiris <zaf@fastmail.com> - 0.2
 	Added option for setting the speech language.
 	More debugging messages added.
 	Recording timeout set to 15 seconds.
 	Documentation updates and diaplan examples.
 
-2011-12-29 Lefteris Zafiris <zaf.000@gmail.com> - 0.1
+2011-12-29 Lefteris Zafiris <zaf@fastmail.com> - 0.1
 	Initial release 0.1
