@@ -88,17 +88,9 @@ my $debug = 0;
 # ----------------------------- #
 
 my %AGI;
-my $http;
-my $fh;
-my $tmpname;
 my $format;
 my @result;
-my $name;
-my $audio;
-my $uaresponse;
-my %response;
 my $silence;
-my $flac;
 my $results    = 1;
 my $beep       = "BEEP";
 my $comp_level = -1;
@@ -114,18 +106,15 @@ while (<STDIN>) {
 	$AGI{$1} = $2 if (/^agi_(\w+)\:\s+(.*)$/);
 }
 
-$name = " -- $AGI{request}:";
+my $name = " -- $AGI{request}:";
 
 # Reset variables. #
-%response = (
+warn "$name Clearing channel variables.\n" if ($debug);
+my %response = (
 	utterance  => -1,
 	confidence => -1,
 );
-warn "$name Clearing channel variables.\n" if ($debug);
-foreach (keys %response) {
-	print "SET VARIABLE \"$_\" \"$response{$_}\"\n";
-	checkresponse();
-}
+set_channel_vars(%response);
 
 # Abort if key is missing or required programs not found. #
 if (!$key) {
@@ -133,7 +122,7 @@ if (!$key) {
 	checkresponse();
 	die "$name API key is missing. Aborting.\n";
 }
-$flac = `/usr/bin/which flac`;
+my $flac = `/usr/bin/which flac`;
 die "$name flac is missing. Aborting.\n" if (!$flac);
 chomp($flac);
 warn "$name Found flac in: $flac\n" if ($debug);
@@ -187,7 +176,7 @@ elsif ($samplerate == 48000) { $format = "sln48"; }
 else                         { ($format, $samplerate) =  ("sln", 8000); }
 
 # Initialize User agent #
-$http = HTTP::Tiny->new(
+my $http = HTTP::Tiny->new(
 	agent      => 'Asterisk AGI speech recognition script',
 	timeout    => $ua_timeout,
 	verify_SSL => 1,
@@ -198,22 +187,22 @@ $SIG{'INT'} = \&int_handler;
 $SIG{'HUP'} = \&int_handler;
 
 # Record file #
-($fh, $tmpname) = tempfile("stt_XXXXXX", DIR => $tmpdir, UNLINK => 1);
+my ($fh, $tmpname) = tempfile("stt_XXXXXX", DIR => $tmpdir, UNLINK => 1);
 print "RECORD FILE $tmpname $format \"$intkey\" \"$abs_timeout\" $beep \"$silence\"\n";
 @result = checkresponse();
 die "$name Failed to record file, aborting...\n" if ($result[0] == -1);
 
 if ($debug) {
 	warn "$name Recording Format: $format, Rate: $samplerate Hz, ",
-		"$name Language: $language", " $silence, Interrupt keys: $intkey\n";
+		"Language: $language, ", "$silence, Interrupt keys: $intkey\n";
 }
 
-# Encode sound data #
+# Encode audio data to flac #
 system($flac, $comp_level, "--totally-silent", "--channels=1", "--sign=signed", "--bps=16", "--endian=little",
 	"--force-raw-format", "--sample-rate=$samplerate", "$tmpname.$format") == 0 or die "$name $flac failed: $?\n";
 open($fh, "<", "$tmpname.flac") or die "Can't read file: $!";
 
-$audio = do { local $/; <$fh> };
+my $audio = do { local $/; <$fh> };
 close($fh);
 
 my %config = (
@@ -232,7 +221,7 @@ my %json = (
 # Send audio data for analysis #
 my %headers =('Content-Type' => "application/json");
 my %options = ('headers' => \%headers, 'content' => encode_json(\%json));
-$uaresponse= $http->request('POST', "$url:syncrecognize?key=$key", \%options);
+my $uaresponse = $http->request('POST', "$url:syncrecognize?key=$key", \%options);
 
 warn "$name The response was:\n", $uaresponse->{'content'} if ($debug);
 if (!$uaresponse->{'success'}) {
@@ -244,12 +233,17 @@ my $jdata = decode_json($uaresponse->{'content'});
 $response{utterance} = encode('utf8', $jdata->{"results"}[0]->{"alternatives"}[0]->{"transcript"});
 $response{confidence} = $jdata->{"results"}[0]->{"alternatives"}[0]->{"confidence"};
 
-foreach (keys %response) {
-	warn "$name Setting variable: $_ = $response{$_}\n" if ($debug);
-	print "SET VARIABLE \"$_\" \"$response{$_}\"\n";
-	checkresponse();
-}
+set_channel_vars(%response);
 exit;
+
+sub set_channel_vars {
+	my %resp = @_;
+	foreach (keys %resp) {
+		warn "$name Setting variable: $_ = $response{$_}\n" if ($debug);
+		print "SET VARIABLE \"$_\" \"$response{$_}\"\n";
+		checkresponse();
+	}
+}
 
 sub checkresponse {
 	my $input = <STDIN>;

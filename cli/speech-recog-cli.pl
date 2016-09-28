@@ -28,8 +28,6 @@ use MIME::Base64;
 
 my %options;
 my $flac;
-my $audio;
-my $ua;
 my $key;
 my $url        = "https://speech.googleapis.com/v1beta1/speech";
 my $samplerate = 16000;
@@ -53,7 +51,7 @@ my %config = (
 	"max_alternatives" => $results,
 );
 
-$ua = LWP::UserAgent->new(ssl_opts => {verify_hostname => 1});
+my $ua = LWP::UserAgent->new(ssl_opts => {verify_hostname => 1});
 $ua->agent("CLI speech recognition script");
 $ua->env_proxy;
 $ua->conn_cache(LWP::ConnCache->new());
@@ -74,6 +72,7 @@ foreach my $file (@ARGV) {
 		}
 	}
 	print("Opening $filename\n") if (!defined $options{q});
+	my $audio;
 	if (open(my $fh, "<", "$file")) {
 		$audio = do { local $/; <$fh> };
 		close($fh);

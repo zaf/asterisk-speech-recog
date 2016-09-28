@@ -18,7 +18,6 @@
 
 use strict;
 use warnings;
-use URI::Escape;
 use File::Temp qw(tempfile);
 use Getopt::Std;
 use File::Basename;
@@ -28,8 +27,6 @@ use MIME::Base64;
 
 my %options;
 my $flac;
-my $audio;
-my $http;
 my $key;
 my $url        = "https://speech.googleapis.com/v1beta1/speech";
 my $samplerate = 16000;
@@ -53,7 +50,7 @@ my %config = (
 	"max_alternatives" => $results,
 );
 
-$http = HTTP::Tiny->new(
+my $http = HTTP::Tiny->new(
 	agent      => 'CLI speech recognition script',
 	timeout    => 60,
 	verify_SSL => 1,
@@ -74,6 +71,7 @@ foreach my $file (@ARGV) {
 		}
 	}
 	print("Opening $filename\n") if (!defined $options{q});
+	my $audio;
 	if (open(my $fh, "<", "$file")) {
 		$audio = do { local $/; <$fh> };
 		close($fh);
