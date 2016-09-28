@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
 
 #
-# AGI script that renders speech to text using Google's Speech API.
+# AGI script that renders speech to text using Google's Cloud Speech API.
 #
-# Copyright (C) 2011 - 2015, Lefteris Zafiris <zaf@fastmail.com>
+# Copyright (C) 2011 - 2016, Lefteris Zafiris <zaf@fastmail.com>
 #
 # This program is free software, distributed under the terms of
 # the GNU General Public License Version 2. See the COPYING file
@@ -17,7 +17,7 @@
 # (this can be set by the user by the 'timeout' argument, -1 for no timeout) or the
 # interrupt key (# by default) is pressed. If NOBEEP is set, no beep sound is played
 # back to the user to indicate the start of the recording.
-# The recorded sound is send over to googles speech recognition service and the
+# The recorded sound is send over to Google speech recognition service and the
 # returned text string is assigned as the value of the channel variable 'utterance'.
 # The scripts sets the following channel variables:
 # utterance  : The generated text string.
@@ -26,7 +26,7 @@
 #     resulted text is correct.
 #
 # User defined parameters:
-# Speech API key from google:
+# Speech API key from Google:
 #	$key
 #
 # Default language:
@@ -35,28 +35,25 @@
 # Default timeout:
 #	$timeout (value in seconds of silence before recording is stopped)
 #
-# Default interupt key:
+# Default interrupt key:
 #	$intkey (can be any digit from 0 to 9 or # and *, or a combination of them)
 #
 # Sample rate:
-#	$samplerate (value in Hz. 0 for atuomatic detection per channel/call, 16000 for
+#	$samplerate (value in Hz. 0 for automatic detection per channel/call, 16000 for
 #   use with wideband codecs, 8000 for traditional codecs.
 #
 # Profanity filter:
-#	$pro_filter (0:disable, 1: remove profanities, 2: mask profanities)
-#
-# SSL:
-#	$use_ssl (0: disable, 1: enable)
+#	$pro_filter ('false':disable, 'true': remove profanities)
 #
 
 use warnings;
 use strict;
-use URI::Escape;
 use File::Copy qw(move);
 use File::Temp qw(tempfile);
 use HTTP::Tiny;
-use JSON::Tiny qw(decode_json);
+use JSON::Tiny qw(decode_json encode_json);
 use Encode qw(encode);
+use MIME::Base64;
 
 $| = 1;
 
@@ -83,10 +80,7 @@ my $intkey = "#";
 my $samplerate = "";
 
 # Profanity filter              #
-my $pro_filter = 0;
-
-# Use SSL                       #
-my $use_ssl = 1;
+my $pro_filter = "false";
 
 # Verbose debugging messages    #
 my $debug = 0;
@@ -103,17 +97,14 @@ my $name;
 my $audio;
 my $uaresponse;
 my %response;
-my $url;
 my $silence;
-my $filetype;
 my $flac;
 my $results    = 1;
-my $grammar    = "builtin:dictation"; #"builtin:search";
 my $beep       = "BEEP";
 my $comp_level = -1;
-my $ua_timeout = 10;
+my $ua_timeout = 30;
 my $tmpdir     = "/tmp";
-my $host       = "www.google.com/speech-api/v2/recognize";
+my $url        = "https://speech.googleapis.com/v1beta1/speech";
 
 # Store AGI input #
 ($AGI{arg_1}, $AGI{arg_2}, $AGI{arg_3}, $AGI{arg_4}) = @ARGV;
@@ -142,7 +133,6 @@ if (!$key) {
 	checkresponse();
 	die "$name API key is missing. Aborting.\n";
 }
-
 $flac = `/usr/bin/which flac`;
 die "$name flac is missing. Aborting.\n" if (!$flac);
 chomp($flac);
@@ -196,27 +186,14 @@ elsif ($samplerate == 44100) { $format = "sln44"; }
 elsif ($samplerate == 48000) { $format = "sln48"; }
 else                         { ($format, $samplerate) =  ("sln", 8000); }
 
-# Initialise User angent #
-if ($use_ssl) {
-	$url = "https://" . $host;
-	$http = HTTP::Tiny->new(
-		agent      => 'Asterisk AGI speeech recognition script',
-		timeout    => $ua_timeout,
-		verify_SSL => 1,
-	);
-} else {
-	$url = "http://" . $host;
-	$http = HTTP::Tiny->new(
-		agent   => 'Asterisk AGI speeech recognition script',
-		timeout => $ua_timeout,
-	);
-}
-$language = uri_escape($language);
-$grammar  = uri_escape($grammar);
-$url .= "?key=$key&lang=$language&pfilter=$pro_filter&lm=$grammar&maxresults=$results";
+# Initialize User agent #
+$http = HTTP::Tiny->new(
+	agent      => 'Asterisk AGI speech recognition script',
+	timeout    => $ua_timeout,
+	verify_SSL => 1,
+);
 
-
-# Hnadle interrupts #
+# Handle interrupts #
 $SIG{'INT'} = \&int_handler;
 $SIG{'HUP'} = \&int_handler;
 
@@ -228,12 +205,10 @@ die "$name Failed to record file, aborting...\n" if ($result[0] == -1);
 
 if ($debug) {
 	warn "$name Recording Format: $format, Rate: $samplerate Hz, ",
-		"$name Languge: $language, SSL: ", ($use_ssl) ? "yes, " : "no, ",
-		"$silence, Interrupt keys: $intkey\n";
+		"$name Language: $language", " $silence, Interrupt keys: $intkey\n";
 }
 
 # Encode sound data #
-$filetype = "x-flac";
 system($flac, $comp_level, "--totally-silent", "--channels=1", "--sign=signed", "--bps=16", "--endian=little",
 	"--force-raw-format", "--sample-rate=$samplerate", "$tmpname.$format") == 0 or die "$name $flac failed: $?\n";
 open($fh, "<", "$tmpname.flac") or die "Can't read file: $!";
@@ -241,24 +216,33 @@ open($fh, "<", "$tmpname.flac") or die "Can't read file: $!";
 $audio = do { local $/; <$fh> };
 close($fh);
 
-# Send adio data for analysis #
-my %headers =('Content-Type' => "audio/$filetype; rate=$samplerate");
-my %options = ('headers' => \%headers, 'content' => $audio);
-$uaresponse = $http->request('POST', "$url", \%options);
+my %config = (
+	"encoding"         => "FLAC",
+	"sample_rate"      => $samplerate,
+	"language_code"    => $language,
+	"profanity_filter" => $pro_filter,
+);
+my %audio = ( "content" => encode_base64($audio, "") );
+
+my %json = (
+	"config" => \%config,
+	"audio"  => \%audio,
+);
+
+# Send audio data for analysis #
+my %headers =('Content-Type' => "application/json");
+my %options = ('headers' => \%headers, 'content' => encode_json(\%json));
+$uaresponse= $http->request('POST', "$url:syncrecognize?key=$key", \%options);
+
+warn "$name The response was:\n", $uaresponse->{'content'} if ($debug);
 if (!$uaresponse->{'success'}) {
 	print "VERBOSE \"Unable to get recognition data.\" 3\n";
 	checkresponse();
 	die "$name Unable to get recognition data.\n";
 }
-
-foreach (split(/\n/,$uaresponse->{'content'})) {
-	my $jdata = decode_json($_);
-	for ( $jdata->{result}[0]->{alternative}[0] ) {
-		$response{utterance}  = encode('utf8', $_->{transcript});
-		$response{confidence} = $_->{confidence};
-	}
-}
-warn "$name The response was:\n", $uaresponse->{'content'} if ($debug);
+my $jdata = decode_json($uaresponse->{'content'});
+$response{utterance} = encode('utf8', $jdata->{"results"}[0]->{"alternatives"}[0]->{"transcript"});
+$response{confidence} = $jdata->{"results"}[0]->{"alternatives"}[0]->{"confidence"};
 
 foreach (keys %response) {
 	warn "$name Setting variable: $_ = $response{$_}\n" if ($debug);

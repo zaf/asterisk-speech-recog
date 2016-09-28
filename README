@@ -2,7 +2,7 @@
     Speech recognition script for Asterisk
 ==============================================
 
-This script makes use of Google's Speech API in order to render speech
+This script makes use of Google's Cloud Speech API in order to render speech
 to text and return it back to the dialplan as an asterisk channel variable.
 
 ------------
@@ -14,14 +14,8 @@ perl-libjson  Module for manipulating JSON-formatted data
 IO-Socket-SSL Perl module that implements an interface to SSL sockets.
 flac          Free Lossless Audio Codec
 
-Speech API key from Google.
-Internet access in order to contact google and get the speech data.
-
-** Optional/Highly experimental **
-speex         patent-free audio compression format designed for speech.
-              works only with patched speex encoder that supports
-              MIME "x-speex-with-header-byte"
-              https://github.com/zaf/Speex-with-header-bytes
+Cloud Speech API key from Google (https://cloud.google.com/speech).
+Internet access in order to contact Google and get the speech data.
 
 ------------
 Installation
@@ -38,7 +32,7 @@ Records from the current channel until 2 seconds of silence are detected
 (this can be set by the user by the 'timeout' argument, -1 for no timeout) or the
 interrupt key (# by default) is pressed. If NOBEEP is set, no beep sound is played
 back to the user to indicate the start of the recording.
-The recorded sound is send over to googles speech recognition service and the
+The recorded sound is send over to Google speech recognition service and the
 returned text string is assigned as the value of the channel variable 'utterance'.
 The scripts sets the following channel variables:
 
@@ -46,7 +40,7 @@ utterance  : The generated text string.
 confidence : A value between 0 and 1 indicating the probability of a correct recognition.
              Values bigger than 0.95 usually mean that the resulted text is correct.
 
-In case of an unxpected error both these variables are set to '-1'.
+In case of an unexpected error both these variables are set to '-1'.
 
 --------
 Examples
@@ -92,82 +86,104 @@ exten => 1236,n(success),goto(${utterance},1)
 exten => 1236,n(retry),agi(googletts.agi,"Can you please repeat?",en)
 exten => 1236,n,goto(record)
 
-Under the folder wolfram you can find a sample agi script that in combination with speech-recog.agi
-sends queries to WolframAlpha and returs the answers as a dialplan variable. See wolfram/README for
-details and dialplan examples.
-
 -------------------
 Supported Languages
 -------------------
-[['Afrikaans',       ['af-ZA']],
- ['Bahasa Indonesia',['id-ID']],
- ['Bahasa Melayu',   ['ms-MY']],
- ['Català',          ['ca-ES']],
- ['Čeština',         ['cs-CZ']],
- ['Deutsch',         ['de-DE']],
- ['English',         ['en-AU', 'Australia'],
-                     ['en-CA', 'Canada'],
-                     ['en-IN', 'India'],
-                     ['en-NZ', 'New Zealand'],
-                     ['en-ZA', 'South Africa'],
-                     ['en-GB', 'United Kingdom'],
-                     ['en-US', 'United States']],
- ['Español',         ['es-AR', 'Argentina'],
-                     ['es-BO', 'Bolivia'],
-                     ['es-CL', 'Chile'],
-                     ['es-CO', 'Colombia'],
-                     ['es-CR', 'Costa Rica'],
-                     ['es-EC', 'Ecuador'],
-                     ['es-SV', 'El Salvador'],
-                     ['es-ES', 'España'],
-                     ['es-US', 'Estados Unidos'],
-                     ['es-GT', 'Guatemala'],
-                     ['es-HN', 'Honduras'],
-                     ['es-MX', 'México'],
-                     ['es-NI', 'Nicaragua'],
-                     ['es-PA', 'Panamá'],
-                     ['es-PY', 'Paraguay'],
-                     ['es-PE', 'Perú'],
-                     ['es-PR', 'Puerto Rico'],
-                     ['es-DO', 'República Dominicana'],
-                     ['es-UY', 'Uruguay'],
-                     ['es-VE', 'Venezuela']],
- ['Euskara',         ['eu-ES']],
- ['Français',        ['fr-FR']],
- ['Galego',          ['gl-ES']],
- ['Hrvatski',        ['hr_HR']],
- ['IsiZulu',         ['zu-ZA']],
- ['Íslenska',        ['is-IS']],
- ['Italiano',        ['it-IT', 'Italia'],
-                     ['it-CH', 'Svizzera']],
- ['Magyar',          ['hu-HU']],
- ['Nederlands',      ['nl-NL']],
- ['Norsk bokmål',    ['nb-NO']],
- ['Polski',          ['pl-PL']],
- ['Português',       ['pt-BR', 'Brasil'],
-                     ['pt-PT', 'Portugal']],
- ['Română',          ['ro-RO']],
- ['Slovenčina',      ['sk-SK']],
- ['Suomi',           ['fi-FI']],
- ['Svenska',         ['sv-SE']],
- ['Türkçe',          ['tr-TR']],
- ['български',       ['bg-BG']],
- ['Pусский',         ['ru-RU']],
- ['Српски',          ['sr-RS']],
- ['한국어',            ['ko-KR']],
- ['中文',             ['cmn-Hans-CN', '普通话 (中国大陆)'],
-                     ['cmn-Hans-HK', '普通话 (香港)'],
-                     ['cmn-Hant-TW', '中文 (台灣)'],
-                     ['yue-Hant-HK', '粵語 (香港)']],
- ['日本語',           ['ja-JP']],
- ['Lingua latīna',   ['la']]];
+"af-ZA" Afrikaans (Suid-Afrika)
+"id-ID" Bahasa Indonesia (Indonesia)
+"ms-MY" Bahasa Melayu (Malaysia)
+"ca-ES" Català (Espanya)
+"cs-CZ" Čeština (Česká republika)
+"da-DK" Dansk (Danmark)
+"de-DE" Deutsch (Deutschland)
+"en-AU" English (Australia)
+"en-CA" English (Canada)
+"en-GB" English (Great Britain)
+"en-IN" English (India)
+"en-IE" English (Ireland)
+"en-NZ" English (New Zealand)
+"en-PH" English (Philippines)
+"en-ZA" English (South Africa)
+"en-US" English (United States)
+"es-AR" Español (Argentina)
+"es-BO" Español (Bolivia)
+"es-CL" Español (Chile)
+"es-CO" Español (Colombia)
+"es-CR" Español (Costa Rica)
+"es-EC" Español (Ecuador)
+"es-SV" Español (El Salvador)
+"es-ES" Español (España)
+"es-US" Español (Estados Unidos)
+"es-GT" Español (Guatemala)
+"es-HN" Español (Honduras)
+"es-MX" Español (México)
+"es-NI" Español (Nicaragua)
+"es-PA" Español (Panamá)
+"es-PY" Español (Paraguay)
+"es-PE" Español (Perú)
+"es-PR" Español (Puerto Rico)
+"es-DO" Español (República Dominicana)
+"es-UY" Español (Uruguay)
+"es-VE" Español (Venezuela)
+"eu-ES" Euskara (Espainia)
+"fil-PH" Filipino (Pilipinas)
+"fr-FR" Français (France)
+"gl-ES" Galego (España)
+"hr-HR" Hrvatski (Hrvatska)
+"zu-ZA" IsiZulu (Ningizimu Afrika)
+"is-IS" Íslenska (Ísland)
+"it-IT" Italiano (Italia)
+"lt-LT" Lietuvių (Lietuva)
+"hu-HU" Magyar (Magyarország)
+"nl-NL" Nederlands (Nederland)
+"nb-NO" Norsk bokmål (Norge)
+"pl-PL" Polski (Polska)
+"pt-BR" Português (Brasil)
+"pt-PT" Português (Portugal)
+"ro-RO" Română (România)
+"sk-SK" Slovenčina (Slovensko)
+"sl-SI" Slovenščina (Slovenija)
+"fi-FI" Suomi (Suomi)
+"sv-SE" Svenska (Sverige)
+"vi-VN" Tiếng Việt (Việt Nam)
+"tr-TR" Türkçe (Türkiye)
+"el-GR" Ελληνικά (Ελλάδα)
+"bg-BG" Български (България)
+"ru-RU" Русский (Россия)
+"sr-RS" Српски (Србија)
+"uk-UA" Українська (Україна)
+"he-IL" עברית (ישראל)
+"ar-IL" العربية (إسرائيل)
+"ar-JO" العربية (الأردن)
+"ar-AE" العربية (الإمارات)
+"ar-BH" العربية (البحرين)
+"ar-DZ" العربية (الجزائر)
+"ar-SA" العربية (السعودية)
+"ar-IQ" العربية (العراق)
+"ar-KW" العربية (الكويت)
+"ar-MA" العربية (المغرب)
+"ar-TN" العربية (تونس)
+"ar-OM" العربية (عُمان)
+"ar-PS" العربية (فلسطين)
+"ar-QA" العربية (قطر)
+"ar-LB" العربية (لبنان)
+"ar-EG" العربية (مصر)
+"fa-IR" فارسی (ایران)
+"hi-IN" हिन्दी (भारत)
+"th-TH" ไทย (ประเทศไทย)
+"ko-KR" 한국어 (대한민국)
+"cmn-Hant-TW" 國語 (台灣)
+"yue-Hant-HK" 廣東話 (香港)
+"ja-JP" 日本語（日本）
+"cmn-Hans-HK" 普通話 (香港)
+"cmn-Hans-CN" 普通话 (中国大陆)
 
 -----------------------
 Security Considerations
 -----------------------
-This script contacts googles' servers in order send the recorded voice data and get back
-the resulted text. The script uses SSL by default to encrypt all the traffic between
-your pbx and google servers so no 3rd party can eavesdrop your communication, but your
+This script contacts Google servers in order send the recorded voice data and get back
+the resulted text. The script uses TLS by default to encrypt all the traffic between
+your PBX and Google servers so no 3rd party can eavesdrop your communication, but your
 voice data will be available to Google under a not yet defined policy.
 
 ------------
@@ -177,7 +193,7 @@ The '-tiny' suffixed scripts use the HTTP::Tiny perl module instead of LWP::User
 JSON::Tiny instead of JSON. This makes them a lot faster when run in small embedded systems
 or boards like the Raspberry pi. They can be used as an in-place replacement of the normal
 scripts and expose the same interface/cli args. To use them just make sure
-you have HTTP::Tiny and JSON::Tinyinstalled.
+you have HTTP::Tiny and JSON::Tiny installed.
 
 -------
 License

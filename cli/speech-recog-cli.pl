@@ -1,44 +1,42 @@
 #!/usr/bin/env perl
 
 #
-# Render speech to text using Google's Speech API.
+# Render speech to text using Google's Cloud Speech API.
 #
-# Copyright (C) 2011 - 2014, Lefteris Zafiris <zaf@fastmail.com>
+# Copyright (C) 2011 - 2016, Lefteris Zafiris <zaf@fastmail.com>
 #
 # This program is free software, distributed under the terms of
 # the GNU General Public License Version 2. See the COPYING file
 # at the top of the source tree.
 #
-# The script takes as input flac, speex or wav files and returns the following values:
-# status     : Return status. 0 means success, non zero values indicating different errors.
-# id         : Some id string that googles engine returns, not very useful(?).
-# utterance  : The generated text string.
-# confidence : A value between 0 and 1 indicating how 'confident' the recognition engine
+# The script takes as input flac or wav files and returns the following values:
+# transcript : The recognized text string.
+# confidence : A value between 0 and 1 indicating how "confident" the recognition engine
 #  feels about the result. Values bigger than 0.95 usually mean that the
 #  resulted text is correct.
 #
 
 use strict;
 use warnings;
-use URI::Escape;
 use File::Temp qw(tempfile);
 use Getopt::Std;
 use File::Basename;
 use LWP::UserAgent;
 use LWP::ConnCache;
 use JSON;
+use MIME::Base64;
 
 my %options;
-my $filetype;
+my $flac;
 my $audio;
 my $ua;
 my $key;
-my $url        = "https://www.google.com/speech-api/v2/recognize";
-my $samplerate = 8000;
+my $url        = "https://speech.googleapis.com/v1beta1/speech";
+my $samplerate = 16000;
 my $language   = "en-US";
 my $output     = "detailed";
 my $results    = 1;
-my $pro_filter = 0;
+my $pro_filter = "false";
 my $error      = 0;
 
 getopts('k:l:o:r:n:fhq', \%options);
@@ -47,33 +45,35 @@ VERSION_MESSAGE() if (defined $options{h} || !@ARGV);
 
 parse_options();
 
+my %config = (
+	"encoding"         => "FLAC",
+	"sample_rate"      => $samplerate,
+	"language_code"    => $language,
+	"profanity_filter" => $pro_filter,
+	"max_alternatives" => $results,
+);
 
 $ua = LWP::UserAgent->new(ssl_opts => {verify_hostname => 1});
-$ua->agent("CLI speeech recognition script");
+$ua->agent("CLI speech recognition script");
 $ua->env_proxy;
 $ua->conn_cache(LWP::ConnCache->new());
-$ua->timeout(20);
+$ua->timeout(60);
 
-# send each sound file to google and get the recognition results #
+# send each sound file to Google and get the recognition results #
 foreach my $file (@ARGV) {
 	my ($filename, $dir, $ext) = fileparse($file, qr/\.[^.]*/);
-	if ($ext ne ".flac" && $ext ne ".spx" && $ext ne ".wav") {
-		say_msg("Unsupported filetype: $ext");
+	if ($ext ne ".flac" && $ext ne ".wav") {
+		say_msg("Unsupported file-type: $ext");
 		++$error;
 		next;
 	}
-	if ($ext eq ".flac") {
-		$filetype = "x-flac";
-	} elsif ($ext eq ".spx") {
-		$filetype = "x-speex-with-header-byte";
-	} elsif ($ext eq ".wav") {
-		$filetype = "x-flac";
+	if ($ext eq ".wav") {
 		if (($file = encode_flac($file)) eq '-1') {
 			++$error;
 			next;
 		}
 	}
-	print("Openning $filename\n") if (!defined $options{q});
+	print("Opening $filename\n") if (!defined $options{q});
 	if (open(my $fh, "<", "$file")) {
 		$audio = do { local $/; <$fh> };
 		close($fh);
@@ -82,45 +82,33 @@ foreach my $file (@ARGV) {
 		++$error;
 		next;
 	}
-
-	$language   = uri_escape($language);
-	$pro_filter = uri_escape($pro_filter);
-	$results    = uri_escape($results);
+	my %audio = ( "content" => encode_base64($audio, "") );
+	my %json = (
+		"config" => \%config,
+		"audio"  => \%audio,
+	);
 	my $response = $ua->post(
-		"$url?lang=$language&pfilter=$pro_filter&maxresults=$results&key=$key",
-		Content_Type => "audio/$filetype; rate=$samplerate",
-		Content      => "$audio",
+		"$url:syncrecognize?key=$key",
+		Content_Type => "application/json",
+		Content      => encode_json(\%json),
 	);
 	if (!$response->is_success) {
 		say_msg("Failed to get data for file: $file");
 		++$error;
 		next;
 	}
-	my %response;
-	foreach (split(/\n/,$response->content)) {
-		my $jdata = decode_json($_);
-		for (0 .. $results-1) {
-			push(@{$response{transcript}}, $jdata->{result}[0]->{alternative}[$_]->{transcript}) if $jdata->{result}[0]->{alternative}[$_]->{transcript};
-			$response{confidence} = $jdata->{result}[0]->{alternative}[$_]->{confidence} if $jdata->{result}[0]->{alternative}[$_]->{confidence};
-		}
-	}
-	if (!$response{transcript}) {
-		say_msg("Failed to transcript file: $file");
-		++$error;
+	if ($output eq "raw") {
+		print $response->content;
 		next;
 	}
+	my $jdata = decode_json($response->content);
 	if ($output eq "detailed") {
-		foreach my $key (keys %response) {
-			if ($key eq "transcript") {
-				printf "%-10s : %s\n", $key, $_ foreach (@{$response{$key}});
-			} else {
-				printf "%-10s : %s\n", $key, $response{$key};
-			}
+		foreach (@{$jdata->{"results"}[0]->{"alternatives"}}) {
+			printf "%-10s : %s\n", "transcript", $_->{"transcript"};
+			printf "%-10s : %s\n", "confidence", $_->{"confidence"} if $_->{"confidence"};
 		}
 	} elsif ($output eq "compact") {
- 		print "$_\n" foreach (@{$response{transcript}});
-	} elsif ($output eq "raw") {
-		print $response->content;
+		print $_->{"transcript"}."\n" foreach (@{$jdata->{"results"}[0]->{"alternatives"}});
 	}
 }
 
@@ -160,7 +148,7 @@ sub parse_options {
 		$samplerate = $options{r} if ($options{r} =~ /\d+/);
 	}
 	# set profanity filter #
-	$pro_filter = 2 if (defined $options{f});
+	$pro_filter = "true" if (defined $options{f});
 
 	return;
 }
@@ -169,14 +157,14 @@ sub encode_flac {
 # Encode file to flac and return the filename #
 	my $file   = shift;
 	my $tmpdir = "/tmp";
-	my $flac   = `/usr/bin/which flac`;
-
 	if (!$flac) {
-		say_msg("flac encoder is missing. Aborting.");
-		return -1;
+		$flac   = `/usr/bin/which flac`;
+		if (!$flac) {
+			say_msg("flac encoder is missing. Aborting.");
+			return -1;
+		}
+		chomp($flac);
 	}
-	chomp($flac);
-
 	my ($fh, $tmpname) = tempfile(
 		"recg_XXXXXX",
 		DIR    => $tmpdir,
@@ -199,16 +187,16 @@ sub say_msg {
 
 sub VERSION_MESSAGE {
 # Help message #
-	print "Speech recognition using google Speech API.\n\n",
+	print "Speech recognition using Google Cloud Speech API.\n\n",
 		"Usage: $0 [options] [file(s)]\n\n",
 		"Supported options:\n",
 		" -k <key>       specify the Speech API key\n",
 		" -l <lang>      specify the language to use (default 'en-US')\n",
-		" -o <type>      specify the type of output fomratting\n",
+		" -o <type>      specify the type of output formatting\n",
 		"    detailed    print detailed output with info like confidence (default)\n",
 		"    compact     print only the transcripted string\n",
 		"    raw         raw JSON output\n",
-		" -r <rate>      specify the audio sample rate in Hz (deafult 8000)\n",
+		" -r <rate>      specify the audio sample rate in Hz (default 16000)\n",
 		" -n <number>    specify the maximum number of results (default 1)\n",
 		" -f             filter out profanities\n",
 		" -q             don't print any error messages or warnings\n",
