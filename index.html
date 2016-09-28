@@ -71,10 +71,8 @@
     <p>Perl: The Perl Programming Language<br />
     perl-libwww: The World-Wide Web library for Perl<br />
 	perl-libjson: Module for manipulating JSON-formatted data<br />
-    flac: Free Lossless Audio Codec<br />
-    Internet access in order to contact google and get the speech data.<br />
-    If you plan to use SSL you will need to install the 'IO-Socket-SSL' Perl module that implements
-    an interface to SSL sockets.</p>
+	IO-Socket-SSL: Perl module that implements an interface to SSL sockets<br />
+    flac: Free Lossless Audio Codec<br /></p>
 
     <h2>Install</h2>
 
@@ -85,10 +83,10 @@
     <h2>Usage</h2>
 
     <p><b>agi(speech-recog.agi,[lang],[timeout],[intkey],[NOBEEP])</b>: Records from the current
-    channel untill 3 seconds of silence are detected (setting the 'timeout' argument to -1 disables
-    the silence detenction) or the interrupt key (# by default) is pressed. If NOBEEP is set, no
+    channel until 3 seconds of silence are detected (setting the 'timeout' argument to -1 disables
+    the silence detection) or the interrupt key (# by default) is pressed. If NOBEEP is set, no
     beep sound is played back to the user to indicate the start of the recording. The recorded
-    sound is send over to googles speech recognition service and the returned text string is
+    sound is send over to Google speech recognition service and the returned text string is
     assigned as the value of the channel variable 'utterance'.<br />
     The scripts sets the following channel variables:<br />
     <b>utterance:</b> The transcripted text string.<br />
@@ -97,7 +95,7 @@
 
     <p>Asterisk dialplan examples:<br />
     In these examples <a href="http://zaf.github.com/asterisk-googletts/">googletts.agi</a> script
-    is used for speech synthesys:<br /></p>
+    is used for speech synthesis:<br /></p>
     <pre>
 ;;Simple speech recognition
 exten =&gt; 1234,1,Answer()
@@ -188,9 +186,12 @@ exten =&gt; 1237,n(end),Hangup()
 
     <h2>Download</h2>
 
-    <p>Develompent snapshots that support Speech API v2 are available in either <a href=
+    <p>Development snapshots that support Speech API v2 are available in either <a href=
     "https://github.com/zaf/asterisk-speech-recog/zipball/master">zip</a> or <a href=
     "https://github.com/zaf/asterisk-speech-recog/tarball/master">tar</a> formats.</p>
+
+    <p>A version that supports the new <a href="https://cloud.google.com/speech">Cloud Speech API</a>
+    can be downloaded <a href="https://github.com/zaf/asterisk-speech-recog/archive/cloud_api.zip">here</a>.</p>
 
     <p>You can also clone the project with <a href="http://git-scm.com">Git</a> by running:</p>
 <pre>
@@ -201,7 +202,7 @@ $ git clone git://github.com/zaf/asterisk-speech-recog
 
     <p><a href="http://zaf.github.com/asterisk-googletts/">GoogleTTS text to speech script for
     asterisk</a><br />
-	<a href="http://zaf.github.com/asterisk-googletranslate/">Text translation using Google Trnanslate
+	<a href="http://zaf.github.com/asterisk-googletranslate/">Text translation using Google Translate
     API for Asterisk</a><br />
     <a href="http://zaf.github.com/asterisk-mstts/">Speech synthesis using Microsoft Translator
     API for Asterisk</a><br />
