@@ -96,7 +96,7 @@ my $beep       = "BEEP";
 my $comp_level = -8;
 my $ua_timeout = 30;
 my $tmpdir     = "/tmp";
-my $url        = "https://speech.googleapis.com/v1beta1/speech";
+my $url        = "https://speech.googleapis.com/v1/speech";
 
 # Store AGI input #
 ($AGI{arg_1}, $AGI{arg_2}, $AGI{arg_3}, $AGI{arg_4}) = @ARGV;
@@ -208,9 +208,9 @@ close($fh);
 
 my %config = (
 	"encoding"         => "FLAC",
-	"sample_rate"      => $samplerate,
-	"language_code"    => $language,
-	"profanity_filter" => $pro_filter,
+	"sampleRateHertz"  => $samplerate,
+	"languageCode"     => $language,
+	"profanityFilter"  => $pro_filter,
 );
 my %audio = ( "content" => encode_base64($audio, "") );
 
@@ -220,7 +220,7 @@ my %json = (
 );
 # Send audio data for analysis #
 my $uaresponse = $ua->post(
-	"$url:syncrecognize?key=$key",
+	"$url:recognize?key=$key",
 	Content_Type => "application/json",
 	Content      => encode_json(\%json),
 );

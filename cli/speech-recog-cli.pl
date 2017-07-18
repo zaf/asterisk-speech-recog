@@ -29,7 +29,7 @@ use MIME::Base64;
 my %options;
 my $flac;
 my $key;
-my $url        = "https://speech.googleapis.com/v1beta1/speech";
+my $url        = "https://speech.googleapis.com/v1/speech";
 my $samplerate = 16000;
 my $language   = "en-US";
 my $output     = "detailed";
@@ -45,10 +45,10 @@ parse_options();
 
 my %config = (
 	"encoding"         => "FLAC",
-	"sample_rate"      => $samplerate,
-	"language_code"    => $language,
-	"profanity_filter" => $pro_filter,
-	"max_alternatives" => $results,
+	"sampleRateHertz"  => $samplerate,
+	"languageCode"     => $language,
+	"profanityFilter"  => $pro_filter,
+	"maxAlternatives"  => $results,
 );
 
 my $ua = LWP::UserAgent->new(ssl_opts => {verify_hostname => 1});
@@ -87,7 +87,7 @@ foreach my $file (@ARGV) {
 		"audio"  => \%audio,
 	);
 	my $response = $ua->post(
-		"$url:syncrecognize?key=$key",
+		"$url:recognize?key=$key",
 		Content_Type => "application/json",
 		Content      => encode_json(\%json),
 	);

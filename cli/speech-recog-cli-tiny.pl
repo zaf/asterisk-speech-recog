@@ -28,7 +28,7 @@ use MIME::Base64;
 my %options;
 my $flac;
 my $key;
-my $url        = "https://speech.googleapis.com/v1beta1/speech";
+my $url        = "https://speech.googleapis.com/v1/speech";
 my $samplerate = 16000;
 my $language   = "en-US";
 my $output     = "detailed";
@@ -44,10 +44,10 @@ parse_options();
 
 my %config = (
 	"encoding"         => "FLAC",
-	"sample_rate"      => $samplerate,
-	"language_code"    => $language,
-	"profanity_filter" => $pro_filter,
-	"max_alternatives" => $results,
+	"sampleRateHertz"  => $samplerate,
+	"languageCode"     => $language,
+	"profanityFilter"  => $pro_filter,
+	"maxAlternatives"  => $results,
 );
 
 my $http = HTTP::Tiny->new(
@@ -88,7 +88,7 @@ foreach my $file (@ARGV) {
 
 	my %headers =('Content-Type' => "application/json");
 	my %options = ('headers' => \%headers, 'content' => encode_json(\%json));
-	my $response = $http->request('POST', "$url:syncrecognize?key=$key", \%options);
+	my $response = $http->request('POST', "$url:recognize?key=$key", \%options);
 	if (!$response->{'success'}) {
 		say_msg("Failed to get data for file: $file");
 		++$error;
