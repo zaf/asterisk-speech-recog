@@ -1,3 +1,7 @@
+2017-10-20 Lefteris Zafiris <zaf@fastmail.com> - 0.8
+	Added support for the Cloud SPeech API. Support for
+	the old Speech API removed.
+
 2014-05-28 Lefteris Zafiris <zaf@fastmail.com> - 0.7
 	Added support for version 2 of Speech API.
 
