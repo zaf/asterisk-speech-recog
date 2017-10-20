@@ -8,7 +8,7 @@
 
   <title>Speech recognition for Asterisk PBX</title>
   <meta name="description" content=
-  "Asterisk AGI script for voice recognition using Google Speech API." />
+  "Asterisk AGI script for voice recognition using Cloud Speech API by Google." />
   <style type="text/css">
 /*<![CDATA[*/
     body {
@@ -58,10 +58,10 @@
     Asterisk</a></h1>
 
     <div class="description">
-      Speech recognition script for Asterisk that uses Google speech API.
+      Speech recognition script for Asterisk that uses Cloud Speech API by Google.
     </div>
 
-    <p>This AGI script makes use of Google's speech recognition engine in order to render speech to
+    <p>This AGI script makes use of Google's <a href=https://cloud.google.com/speech/>Cloud Speech API</a> in order to render speech to
     text and return it back to the dialplan as an asterisk channel variable. See <a href=
     "https://raw.github.com/zaf/asterisk-speech-recog/master/README">README</a> for a complete list
     of supported languages.</p>
@@ -140,39 +140,6 @@ exten =&gt; 1236,n(success),goto(${utterance},1)
 exten =&gt; 1236,n(retry),agi(googletts.agi,"Can you please repeat?",en)
 exten =&gt; 1236,n,goto(record)
 
-</pre><br />
-
-    <p>Under the folder wolfram you can find a sample agi script that in combination with
-    speech-recog.agi sends queries to WolframAlpha and returns the answers as a dialplan variable
-    that can be read back to the user.<br />
-    See <a href=
-    "https://raw.github.com/zaf/asterisk-speech-recog/master/samples/wolfram/README">wolfram/README</a>
-    for details.</p>
-
-    <p>A diaplan example follows where you can dictate your question to WolframAplha and listen to
-    the answer on your phone.<br /></p>
-    <pre>
-;WolframAlpha query demo:
-exten =&gt; 1237,1,Answer()
-exten =&gt; 1237,n,agi(googletts.agi,"What is your question?",en)
-
-;;Record the question and render it to text:
-exten =&gt; 1237,n(record),agi(speech-recog.agi,en-US)
-exten =&gt; 1237,n,GotoIf($["${confidence}" &gt; "0.8"]?success:retry)
-
-;;Submit the question to wolfram:
-exten =&gt; 1237,n(success),agi(wolfram.agi,"${utterance}")
-
-;;Playback the answer:
-exten =&gt; 1237,n,agi(googletts.agi,"${wolfram_answer}",en)
-exten =&gt; 1237,n,goto(end)
-
-;;Retry in case speech recognition wasn't successful:
-exten =&gt; 1237,n(retry),agi(googletts.agi,"Can you please repeat more clearly?",en)
-exten =&gt; 1237,n,goto(record)
-
-exten =&gt; 1237,n(end),Hangup()
-
 </pre>
 
     <h2>License</h2>
@@ -186,12 +153,9 @@ exten =&gt; 1237,n(end),Hangup()
 
     <h2>Download</h2>
 
-    <p>Development snapshots that support Speech API v2 are available in either <a href=
+    <p>Development snapshots are available in either <a href=
     "https://github.com/zaf/asterisk-speech-recog/zipball/master">zip</a> or <a href=
     "https://github.com/zaf/asterisk-speech-recog/tarball/master">tar</a> formats.</p>
-
-    <p>A version that supports the new <a href="https://cloud.google.com/speech">Cloud Speech API</a>
-    can be downloaded <a href="https://github.com/zaf/asterisk-speech-recog/archive/cloud_api.zip">here</a>.</p>
 
     <p>You can also clone the project with <a href="https://git-scm.com">Git</a> by running:</p>
 <pre>
