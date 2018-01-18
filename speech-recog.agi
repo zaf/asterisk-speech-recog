@@ -12,11 +12,13 @@
 # -----
 # Usage
 # -----
-# agi(speech-recog.agi,[lang],[timeout],[intkey],[NOBEEP])
+# agi(speech-recog.agi,[lang],[timeout],[intkey],[NOBEEP],[rtimeout],[speechContexts])
 # Records from the current channel until 2 seconds of silence are detected
 # (this can be set by the user by the 'timeout' argument, -1 for no timeout) or the
 # interrupt key (# by default) is pressed. If NOBEEP is set, no beep sound is played
-# back to the user to indicate the start of the recording.
+# back to the user to indicate the start of the recording. If 'rtimeout' is set, 
+# overwrite to the absolute recording timeout. 'SpeechContext' provides hints to 
+# favor specific words and phrases in the results. Usage: [Agamemnon,Midas]
 # The recorded sound is send over to Google speech recognition service and the
 # returned text string is assigned as the value of the channel variable 'utterance'.
 # The scripts sets the following channel variables:
@@ -97,9 +99,11 @@ my $comp_level = -8;
 my $ua_timeout = 30;
 my $tmpdir     = "/tmp";
 my $url        = "https://speech.googleapis.com/v1/speech";
+my $phrases    = "";
+my @phrases    = [];
 
 # Store AGI input #
-($AGI{arg_1}, $AGI{arg_2}, $AGI{arg_3}, $AGI{arg_4}) = @ARGV;
+($AGI{arg_1}, $AGI{arg_2}, $AGI{arg_3}, $AGI{arg_4}, $AGI{arg_5}, $AGI{arg_6}) = @ARGV;
 while (<STDIN>) {
 	chomp;
 	last if (!length);
@@ -151,6 +155,16 @@ if (length($AGI{arg_3})) {
 
 if (length($AGI{arg_4})) {
 	$beep = "" if ($AGI{arg_4} eq "NOBEEP");
+}
+
+if (length($AGI{arg_5})) {
+	$abs_timeout = $AGI{arg_5};
+}
+
+if (length($AGI{arg_6})) {
+	$phrases = $AGI{arg_6};
+	$phrases = substr($phrases,1,-1);
+	@phrases = split(',',$phrases);
 }
 
 # Answer channel if not already answered #
@@ -211,6 +225,7 @@ my %config = (
 	"sampleRateHertz"  => $samplerate,
 	"languageCode"     => $language,
 	"profanityFilter"  => $pro_filter,
+	"speechContexts"   => {"phrases" => \z@phrases},
 );
 my %audio = ( "content" => encode_base64($audio, "") );
 
