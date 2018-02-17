@@ -225,7 +225,7 @@ my %config = (
 	"sampleRateHertz"  => $samplerate,
 	"languageCode"     => $language,
 	"profanityFilter"  => $pro_filter,
-	"speechContexts"   => {"phrases" => \z@phrases},
+	"speechContexts"   => {"phrases" => \@phrases},
 );
 my %audio = ( "content" => encode_base64($audio, "") );
 
