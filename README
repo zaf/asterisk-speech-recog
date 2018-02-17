@@ -31,7 +31,9 @@ agi(speech-recog.agi,[lang],[timeout],[intkey],[NOBEEP])
 Records from the current channel until 2 seconds of silence are detected
 (this can be set by the user by the 'timeout' argument, -1 for no timeout) or the
 interrupt key (# by default) is pressed. If NOBEEP is set, no beep sound is played
-back to the user to indicate the start of the recording.
+back to the user to indicate the start of the recording. If 'rtimeout' is set, 
+overwrite to the absolute recording timeout. 'SpeechContext' provides hints to 
+favor specific words and phrases in the results. Usage: [Agamemnon,Midas]
 The recorded sound is send over to Google speech recognition service and the
 returned text string is assigned as the value of the channel variable 'utterance'.
 The scripts sets the following channel variables:
