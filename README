@@ -27,7 +27,7 @@ To make sure check your /etc/asterisk/asterisk.conf file
 -----
 Usage
 -----
-agi(speech-recog.agi,[lang],[timeout],[intkey],[NOBEEP])
+agi(speech-recog.agi,[lang],[timeout],[intkey],[NOBEEP],[rtimeout],[speechContexts])
 Records from the current channel until 2 seconds of silence are detected
 (this can be set by the user by the 'timeout' argument, -1 for no timeout) or the
 interrupt key (# by default) is pressed. If NOBEEP is set, no beep sound is played
